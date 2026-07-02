@@ -1,8 +1,10 @@
 # Sensitive config - DO NOT COMMIT
 config.js
+upload-to-supabase.js
 
 # Temp files
 _temp_audio/
+_temp_uploads/
 node_modules/
 
 # OS files
