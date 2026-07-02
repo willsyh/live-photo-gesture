@@ -4,6 +4,10 @@ Website interaktif yang menggunakan **AI MediaPipe** untuk mendeteksi gesture ta
 
 ![Live Photo Gesture](screenshots/preview.png)
 
+## 🚀 Live Demo
+
+**[https://live-photo-gesture.vercel.app/](https://live-photo-gesture.vercel.app/)**
+
 ---
 
 ## ✨ Fitur Utama
