@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIVE PHOTO GESTURE</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+
+    <div id="onboardingModal" class="modal-overlay">
+        <div class="stepper-container">
+            <div class="stepper-content" id="step1">
+                <h2> Selamat Datang!</h2>
+                <p>Siap-siap ya! Website ini pakai AI untuk deteksi gesture tangan dan wajah kamu. Pastikan ruangan cukup terang.</p>
+            </div>
+            <div class="stepper-content" id="step2" style="display: none;">
+                <h2> Gesture Tangan</h2>
+                <p>✋ 5 Jari = Normal<br>✌️ 2 Jari = Blur<br>☝️ 1 Jari = Telunjuk<br>✊ Kepal = Lawan<br>🤟 Metal<br>❤️ Sarangheyo</p>
+            </div>
+            <div class="stepper-content" id="step3" style="display: none;">
+                <h2> Ambil Foto</h2>
+                <p>Tunjukkan ✋ lalu ubah ke ✊ untuk ambil foto. Hitung mundur 3-2-1 akan muncul!</p>
+            </div>
+            <div class="stepper-content" id="step4" style="display: none;">
+                <h2>  Ekspresi Wajah</h2>
+                <p>Buka mulut lebar = Ngangap 😲<br>Cemberut = Galau 😡<br>Tutup mulut pakai tangan = Rahasia 🤭</p>
+            </div>
+
+            <div class="stepper-footer">
+                <button id="btnBack" class="btn-stepper btn-back" style="visibility: hidden;">Kembali</button>
+                <div class="step-indicators">
+                    <span class="dot active"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+                <button id="btnNext" class="btn-stepper btn-next">Lanjut</button>
+            </div>
+        </div>
+    </div>
+
+    <button id="burgerBtn" class="burger-btn">☰</button>
+
+    <div id="sideMenu" class="side-menu">
+        <button id="closeMenuBtn" class="close-menu">Tutup Menu</button>
+        <div class="menu-list">
+            <div class="menu-item">✋ Normal</div>
+            <div class="menu-item">✌️ Blur Foto</div>
+            <div class="menu-item">☝️ Telunjuk</div>
+            <div class="menu-item">✊ Lawan 🔥</div>
+            <div class="menu-item">🤟 Metal</div>
+            <div class="menu-item">😲 Ngangap</div>
+            <div class="menu-item">😡 Cemberut</div>
+            <div class="menu-item">🤭 Tutup Mulut</div>
+            <div class="menu-item">❤️ Sarangheyo</div>
+            <div class="menu-item">📷 Ambil Foto</div>
+        </div>
+    </div>
+
+    <header>
+        <h1>LIVE PHOTO GESTURE</h1>
+    </header>
+
+    <div class="main-container">
+        <div class="photo-frame-wrapper">
+            <div class="photo-frame" id="photoFrame">
+                <video id="webcam" autoplay playsinline muted></video>
+                <canvas id="outputCanvas" width="640" height="480"></canvas>
+                <canvas id="captureCanvas" width="640" height="480" style="display: none;"></canvas>
+            </div>
+            <div class="status-banner" id="statusText" style="background: #d1fae5;">Menunggu...</div>
+            <div class="status-banner" id="emotionStatus">Wajah: Menunggu AI...</div>
+        </div>
+        <button id="albumBtn" class="album-btn">📷 Album (<span id="photoCount">0</span>)</button>
+    </div>
+
+    <!-- Countdown Overlay -->
+    <div id="countdownOverlay" class="countdown-overlay" style="display: none;">
+        <div id="countdownNumber" class="countdown-number">3</div>
+    </div>
+
+    <!-- Album Modal -->
+    <div id="albumModal" class="album-modal" style="display: none;">
+        <div class="album-container">
+            <div class="album-header">
+                <h2>📷 Album Foto</h2>
+                <button id="closeAlbumBtn" class="close-album">Tutup</button>
+            </div>
+            <div id="albumGrid" class="album-grid">
+                <p class="album-empty">Belum ada foto. Pose ✋ lalu ✊ untuk ambil foto!</p>
+            </div>
+            <div class="album-footer">
+                <button id="downloadAllBtn" class="btn-album" style="display: none;">💾 Download Semua</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioLawan" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/lawan.mp3" loop></audio>
+    <audio id="audioBlur" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/blur.mp3" loop></audio>
+    <audio id="audioTelunjuk" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/telunjuk.mp3" loop></audio>
+    <audio id="audioCemberut" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/cemberut.mp3" loop></audio>
+    <audio id="audioTutupMulut" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/tutup_mulut.mp3" loop></audio>
+    <audio id="audioNgangap" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/ngapngap.mp3" loop></audio>
+    <audio id="audioMetal" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/metal.mp3" loop></audio>
+    <audio id="audioSarangheyo" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/sarangheyo.mp3" loop></audio>
+
+    <script src="script.js"></script>
+
+    <footer class="footer">
+        <p>Dibuat dengan ❤️ oleh <strong>Will</strong></p>
+    </footer>
+</body>
+</html>

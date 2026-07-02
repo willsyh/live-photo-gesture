@@ -1,0 +1,10 @@
+# Sensitive config - DO NOT COMMIT
+config.js
+
+# Temp files
+_temp_audio/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
