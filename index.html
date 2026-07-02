@@ -79,6 +79,57 @@
         <button id="albumBtn" class="album-btn">📷 Album (<span id="photoCount">0</span>)</button>
     </div>
 
+    <!-- Floating Theme Button -->
+    <button id="themeBtn" class="theme-float-btn">🎨</button>
+
+    <!-- Theme Picker Modal -->
+    <div id="themeModal" class="theme-modal" style="display: none;">
+        <div class="theme-container">
+            <div class="theme-header">
+                <h3>🎨 Pilih Warna Button</h3>
+                <button id="closeThemeBtn" class="close-theme">Tutup</button>
+            </div>
+
+            <div class="theme-section">
+                <p class="theme-label">Preset Warna</p>
+                <div class="theme-presets">
+                    <button class="theme-preset" data-color="#10b981" style="background: #10b981;" title="Hijau"></button>
+                    <button class="theme-preset" data-color="#3b82f6" style="background: #3b82f6;" title="Biru"></button>
+                    <button class="theme-preset" data-color="#8b5cf6" style="background: #8b5cf6;" title="Ungu"></button>
+                    <button class="theme-preset" data-color="#ec4899" style="background: #ec4899;" title="Pink"></button>
+                    <button class="theme-preset" data-color="#ef4444" style="background: #ef4444;" title="Merah"></button>
+                    <button class="theme-preset" data-color="#f97316" style="background: #f97316;" title="Orange"></button>
+                    <button class="theme-preset" data-color="#eab308" style="background: #eab308;" title="Kuning"></button>
+                    <button class="theme-preset" data-color="#06b6d4" style="background: #06b6d4;" title="Cyan"></button>
+                    <button class="theme-preset" data-color="#1f2937" style="background: #1f2937;" title="Hitam"></button>
+                    <button class="theme-preset" data-color="#f3f4f6" style="background: #f3f4f6; border: 2px solid #d1d5db;" title="Putih"></button>
+                </div>
+            </div>
+
+            <div class="theme-section">
+                <p class="theme-label">Warna Custom</p>
+                <div class="theme-custom">
+                    <input type="color" id="customColorPicker" value="#10b981">
+                    <button id="applyCustomColor" class="apply-custom-btn">Terapkan</button>
+                </div>
+            </div>
+
+            <div class="theme-section">
+                <p class="theme-label">Gradient</p>
+                <div class="theme-presets">
+                    <button class="theme-gradient" data-gradient="linear-gradient(135deg, #10b981, #06b6d4)" style="background: linear-gradient(135deg, #10b981, #06b6d4);"></button>
+                    <button class="theme-gradient" data-gradient="linear-gradient(135deg, #8b5cf6, #ec4899)" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);"></button>
+                    <button class="theme-gradient" data-gradient="linear-gradient(135deg, #f97316, #eab308)" style="background: linear-gradient(135deg, #f97316, #eab308);"></button>
+                    <button class="theme-gradient" data-gradient="linear-gradient(135deg, #ef4444, #f97316)" style="background: linear-gradient(135deg, #ef4444, #f97316);"></button>
+                    <button class="theme-gradient" data-gradient="linear-gradient(135deg, #3b82f6, #8b5cf6)" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);"></button>
+                    <button class="theme-gradient" data-gradient="linear-gradient(135deg, #ec4899, #f472b6)" style="background: linear-gradient(135deg, #ec4899, #f472b6);"></button>
+                </div>
+            </div>
+
+            <button id="resetThemeBtn" class="reset-theme-btn">↺ Kembali ke Default</button>
+        </div>
+    </div>
+
     <!-- Countdown Overlay -->
     <div id="countdownOverlay" class="countdown-overlay" style="display: none;">
         <div id="countdownNumber" class="countdown-number">3</div>
@@ -112,7 +163,7 @@
     <script src="script.js"></script>
 
     <footer class="footer">
-        <p>Dibuat dengan ❤️ oleh <strong>Will</strong></p>
+        <p><strong>Dibuat dengan ❤️</strong></p>
     </footer>
 </body>
 </html>

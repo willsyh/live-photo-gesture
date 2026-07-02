@@ -632,3 +632,134 @@ checkCombinedState = function() {
     originalCheckCombinedState();
     checkPhotoTrigger(handMode);
 };
+
+// ==================== FITUR CUSTOM WARNA ====================
+
+const themeBtn = document.getElementById('themeBtn');
+const themeModal = document.getElementById('themeModal');
+const closeThemeBtn = document.getElementById('closeThemeBtn');
+const customColorPicker = document.getElementById('customColorPicker');
+const applyCustomColor = document.getElementById('applyCustomColor');
+const resetThemeBtn = document.getElementById('resetThemeBtn');
+
+// Default colors
+const defaultColors = {
+    primary: '#10b981',
+    gradient: null
+};
+
+// Load saved theme
+function loadTheme() {
+    const saved = localStorage.getItem('buttonTheme');
+    if (saved) {
+        const theme = JSON.parse(saved);
+        if (theme.gradient) {
+            applyButtonColor(theme.gradient);
+        } else if (theme.color) {
+            applyButtonColor(theme.color);
+        }
+    }
+}
+
+// Apply color to ALL buttons (except theme picker)
+function applyButtonColor(colorOrGradient) {
+    const allButtons = document.querySelectorAll('button');
+    allButtons.forEach(btn => {
+        // Skip theme picker buttons and utility buttons
+        if (btn.closest('.theme-modal')) return;
+        if (btn.id === 'themeBtn') return;
+        if (btn.classList.contains('btn-back')) return;
+        if (btn.classList.contains('close-album')) return;
+        if (btn.classList.contains('close-menu')) return;
+        if (btn.classList.contains('btn-delete')) return;
+        if (btn.classList.contains('burger-btn')) return;
+
+        // Add pulse animation
+        btn.classList.remove('color-changing');
+        void btn.offsetWidth; // Force reflow
+        btn.classList.add('color-changing');
+        setTimeout(() => btn.classList.remove('color-changing'), 300);
+
+        if (colorOrGradient.includes('gradient')) {
+            btn.style.background = colorOrGradient;
+            btn.style.color = '#fff';
+        } else {
+            btn.style.background = colorOrGradient;
+            const hex = colorOrGradient.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            btn.style.color = luminance > 0.5 ? '#000' : '#fff';
+        }
+    });
+}
+
+// Save theme
+function saveTheme(theme) {
+    localStorage.setItem('buttonTheme', JSON.stringify(theme));
+}
+
+// Open/close modal with smooth animation
+themeBtn.addEventListener('click', () => {
+    themeModal.style.display = 'flex';
+    requestAnimationFrame(() => themeModal.classList.add('show'));
+});
+
+closeThemeBtn.addEventListener('click', () => {
+    themeModal.classList.remove('show');
+    setTimeout(() => themeModal.style.display = 'none', 300);
+});
+
+themeModal.addEventListener('click', (e) => {
+    if (e.target === themeModal) {
+        themeModal.classList.remove('show');
+        setTimeout(() => themeModal.style.display = 'none', 300);
+    }
+});
+
+// Preset colors
+document.querySelectorAll('.theme-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const color = btn.dataset.color;
+        applyButtonColor(color);
+        saveTheme({ color });
+        document.querySelectorAll('.theme-preset, .theme-gradient').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+// Gradient colors
+document.querySelectorAll('.theme-gradient').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const gradient = btn.dataset.gradient;
+        applyButtonColor(gradient);
+        saveTheme({ gradient });
+        document.querySelectorAll('.theme-preset, .theme-gradient').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+// Custom color picker
+applyCustomColor.addEventListener('click', () => {
+    const color = customColorPicker.value;
+    applyButtonColor(color);
+    saveTheme({ color });
+    document.querySelectorAll('.theme-preset, .theme-gradient').forEach(b => b.classList.remove('active'));
+});
+
+// Reset to default
+resetThemeBtn.addEventListener('click', () => {
+    // Clear all button styles
+    document.querySelectorAll('button').forEach(btn => {
+        btn.style.background = '';
+        btn.style.color = '';
+    });
+    document.documentElement.style.removeProperty('--user-btn-color');
+    document.documentElement.style.removeProperty('--user-btn-is-gradient');
+    localStorage.removeItem('buttonTheme');
+    document.querySelectorAll('.theme-preset, .theme-gradient').forEach(b => b.classList.remove('active'));
+});
+
+// Load theme on page load
+loadTheme();
