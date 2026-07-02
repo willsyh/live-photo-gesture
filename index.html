@@ -59,6 +59,7 @@
             <div class="menu-item">🤭 Tutup Mulut</div>
             <div class="menu-item">❤️ Sarangheyo</div>
             <div class="menu-item">📷 Ambil Foto</div>
+            <div class="menu-item" onclick="document.getElementById('photoboothBtn').click()">✨ Photobooth</div>
         </div>
     </div>
 
@@ -77,6 +78,7 @@
             <div class="status-banner" id="emotionStatus">Wajah: Menunggu AI...</div>
         </div>
         <button id="albumBtn" class="album-btn">📷 Album (<span id="photoCount">0</span>)</button>
+        <button id="photoboothBtn" class="photobooth-btn">✨ Photobooth</button>
     </div>
 
     <!-- Floating Theme Button -->
@@ -147,6 +149,82 @@
             </div>
             <div class="album-footer">
                 <button id="downloadAllBtn" class="btn-album" style="display: none;">💾 Download Semua</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photobooth Modal -->
+    <div id="photoboothModal" class="photobooth-modal">
+        <div class="photobooth-container">
+            <div class="photobooth-header">
+                <button id="closePhotoboothBtn" class="close-photobooth">← Kembali</button>
+                <h2>✨ Photobooth</h2>
+                <div class="pb-header-spacer"></div>
+            </div>
+
+            <div class="pb-camera-wrapper">
+                <video id="pbWebcam" autoplay playsinline muted></video>
+                <canvas id="pbOutputCanvas" width="640" height="480"></canvas>
+                <canvas id="pbCaptureCanvas" width="640" height="480" style="display: none;"></canvas>
+                <div id="pbFrameOverlay" class="pb-frame-overlay"></div>
+                <div id="pbCountdown" class="pb-countdown">3</div>
+                <button id="pbCaptureBtn" class="pb-capture-btn">
+                    <span class="pb-capture-ring"></span>
+                    <span class="pb-capture-dot"></span>
+                </button>
+            </div>
+
+            <div class="pb-frame-selector">
+                <p class="pb-frame-label">Pilih Frame</p>
+                <div id="pbFrameList" class="pb-frame-list">
+                    <button class="pb-frame-item active" data-frame="none">
+                        <span class="pb-frame-preview">○</span>
+                        <span>Normal</span>
+                    </button>
+                    <button class="pb-frame-item" data-frame="polaroid">
+                        <span class="pb-frame-preview">□</span>
+                        <span>Polaroid</span>
+                    </button>
+                    <button class="pb-frame-item" data-frame="film">
+                        <span class="pb-frame-preview">◻</span>
+                        <span>Film</span>
+                    </button>
+                    <button class="pb-frame-item" data-frame="hearts">
+                        <span class="pb-frame-preview">♡</span>
+                        <span>Hearts</span>
+                    </button>
+                    <button class="pb-frame-item" data-frame="stars">
+                        <span class="pb-frame-preview">☆</span>
+                        <span>Stars</span>
+                    </button>
+                    <button class="pb-frame-item" data-frame="neon">
+                        <span class="pb-frame-preview">◎</span>
+                        <span>Neon</span>
+                    </button>
+                    <button class="pb-frame-item" data-frame="retro">
+                        <span class="pb-frame-preview">◇</span>
+                        <span>Retro</span>
+                    </button>
+                    <button class="pb-frame-item" data-frame="floral">
+                        <span class="pb-frame-preview">❋</span>
+                        <span>Floral</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photobooth Result Modal -->
+    <div id="pbResultModal" class="pb-result-modal">
+        <div class="pb-result-container">
+            <div class="pb-result-icon">🎉</div>
+            <h3>Foto Tersimpan!</h3>
+            <div class="pb-result-preview">
+                <img id="pbResultImage" src="" alt="Hasil Foto">
+            </div>
+            <div class="pb-result-actions">
+                <button id="pbSaveBtn" class="pb-result-btn pb-btn-save">💾 Download</button>
+                <button id="pbRetakeBtn" class="pb-result-btn pb-btn-retake">📸 Ambil Lagi</button>
             </div>
         </div>
     </div>

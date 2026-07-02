@@ -763,3 +763,206 @@ resetThemeBtn.addEventListener('click', () => {
 
 // Load theme on page load
 loadTheme();
+
+// ==================== FITUR PHOTOBOOTH ====================
+
+const photoboothBtn = document.getElementById('photoboothBtn');
+const photoboothModal = document.getElementById('photoboothModal');
+const closePhotoboothBtn = document.getElementById('closePhotoboothBtn');
+const pbWebcam = document.getElementById('pbWebcam');
+const pbOutputCanvas = document.getElementById('pbOutputCanvas');
+const pbOutputCtx = pbOutputCanvas.getContext('2d');
+const pbCaptureCanvas = document.getElementById('pbCaptureCanvas');
+const pbCaptureCtx = pbCaptureCanvas.getContext('2d');
+const pbFrameOverlay = document.getElementById('pbFrameOverlay');
+const pbCountdown = document.getElementById('pbCountdown');
+const pbCaptureBtn = document.getElementById('pbCaptureBtn');
+const pbFrameList = document.getElementById('pbFrameList');
+const pbResultModal = document.getElementById('pbResultModal');
+const pbResultImage = document.getElementById('pbResultImage');
+const pbSaveBtn = document.getElementById('pbSaveBtn');
+const pbRetakeBtn = document.getElementById('pbRetakeBtn');
+
+let pbStream = null;
+let selectedFrame = 'none';
+let pbPhotos = [];
+
+// Open photobooth with animation
+photoboothBtn.addEventListener('click', async () => {
+    photoboothModal.style.display = 'flex';
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            photoboothModal.classList.add('show');
+        });
+    });
+
+    try {
+        pbStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+        });
+        pbWebcam.srcObject = pbStream;
+        pbWebcam.play();
+        drawPbFrameLoop();
+    } catch (err) {
+        console.error('Kamera photobooth gagal:', err);
+        closePhotobooth();
+    }
+});
+
+// Close photobooth with animation
+function closePhotobooth() {
+    photoboothModal.classList.remove('show');
+    setTimeout(() => {
+        photoboothModal.style.display = 'none';
+        if (pbStream) {
+            pbStream.getTracks().forEach(track => track.stop());
+            pbStream = null;
+        }
+    }, 500);
+}
+
+closePhotoboothBtn.addEventListener('click', closePhotobooth);
+
+// Draw frame on canvas
+function drawPbFrame(ctx, width, height) {
+    if (selectedFrame === 'none') return;
+
+    ctx.save();
+
+    if (selectedFrame === 'polaroid') {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, width, 25);
+        ctx.fillRect(0, height - 55, width, 55);
+        ctx.fillRect(0, 0, 25, height);
+        ctx.fillRect(width - 25, 0, 25, height);
+    } else if (selectedFrame === 'film') {
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, width, 18);
+        ctx.fillRect(0, height - 18, width, 18);
+    } else if (selectedFrame === 'neon') {
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 6;
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = '#a855f7';
+        ctx.strokeRect(15, 15, width - 30, height - 30);
+        ctx.shadowBlur = 0;
+    } else if (selectedFrame === 'hearts' || selectedFrame === 'stars' || selectedFrame === 'floral') {
+        let symbols = selectedFrame === 'hearts' ? ['♡', '♡'] :
+                      selectedFrame === 'stars' ? ['☆', '☆'] : ['❋', '❋'];
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.fillText(symbols[0], 12, 25);
+        ctx.fillText(symbols[1], width - 30, 25);
+    } else if (selectedFrame === 'retro') {
+        const gradient = ctx.createLinearGradient(0, 0, width, height);
+        gradient.addColorStop(0, '#f97316');
+        gradient.addColorStop(0.5, '#fbbf24');
+        gradient.addColorStop(1, '#f97316');
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 12;
+        ctx.strokeRect(10, 10, width - 20, height - 20);
+    }
+
+    ctx.restore();
+}
+
+// Continuous draw for preview
+function drawPbFrameLoop() {
+    if (!pbStream) return;
+    pbOutputCtx.clearRect(0, 0, pbOutputCanvas.width, pbOutputCanvas.height);
+    drawPbFrame(pbOutputCtx, pbOutputCanvas.width, pbOutputCanvas.height);
+    requestAnimationFrame(drawPbFrameLoop);
+}
+
+// Frame selector with smooth transition
+pbFrameList.addEventListener('click', (e) => {
+    const btn = e.target.closest('.pb-frame-item');
+    if (!btn) return;
+
+    document.querySelectorAll('.pb-frame-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedFrame = btn.dataset.frame;
+
+    pbFrameOverlay.className = 'pb-frame-overlay';
+    if (selectedFrame !== 'none') {
+        pbFrameOverlay.classList.add(`frame-${selectedFrame}`);
+    }
+});
+
+// Capture photo with countdown animation
+pbCaptureBtn.addEventListener('click', startPbCountdown);
+
+async function startPbCountdown() {
+    pbCaptureBtn.disabled = true;
+
+    for (let i = 3; i >= 1; i--) {
+        pbCountdown.innerText = i;
+        pbCountdown.classList.remove('show');
+        void pbCountdown.offsetWidth;
+        pbCountdown.classList.add('show');
+        await new Promise(r => setTimeout(r, 800));
+    }
+
+    pbCountdown.classList.remove('show');
+    capturePbPhoto();
+    pbCaptureBtn.disabled = false;
+}
+
+function capturePbPhoto() {
+    // Flash effect
+    const flash = document.createElement('div');
+    flash.className = 'pb-flash';
+    document.querySelector('.pb-camera-wrapper').appendChild(flash);
+    flash.classList.add('show');
+    setTimeout(() => flash.remove(), 300);
+
+    pbCaptureCtx.save();
+    pbCaptureCtx.scale(-1, 1);
+    pbCaptureCtx.drawImage(pbWebcam, -640, 0, 640, 480);
+    pbCaptureCtx.restore();
+
+    drawPbFrame(pbCaptureCtx, 640, 480);
+
+    pbCaptureCanvas.toBlob(async (blob) => {
+        const url = URL.createObjectURL(blob);
+        pbResultImage.src = url;
+
+        // Show result modal
+        pbResultModal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                pbResultModal.classList.add('show');
+            });
+        });
+
+        const photoData = {
+            id: Date.now(),
+            filename: `photobooth_${Date.now()}.jpg`,
+            blob: blob,
+            url: url,
+            supabaseUrl: null,
+            uploading: false
+        };
+
+        pbPhotos.push(photoData);
+        photos.push(photoData);
+        updatePhotoCount();
+        await uploadToSupabase(photoData);
+    }, 'image/jpeg', 0.95);
+}
+
+// Close result modal
+function closePbResult() {
+    pbResultModal.classList.remove('show');
+    setTimeout(() => {
+        pbResultModal.style.display = 'none';
+    }, 400);
+}
+
+pbSaveBtn.addEventListener('click', () => {
+    const lastPhoto = pbPhotos[pbPhotos.length - 1];
+    if (lastPhoto) downloadPhoto(lastPhoto.id);
+    closePbResult();
+});
+
+pbRetakeBtn.addEventListener('click', closePbResult);
