@@ -473,7 +473,8 @@ canvas {
 }
 
 /* ---------- Pilih bingkai ---------- */
-.frame-picker {
+.frame-picker,
+.idol-picker {
     background: var(--card-bg);
     border: 3px solid var(--ink);
     border-radius: var(--wobble);
@@ -676,6 +677,175 @@ canvas {
     font-size: 0.85rem;
     color: var(--ink-soft);
     line-height: 1;
+}
+
+/* ---------- Foto bareng idol ---------- */
+.idol-overlay {
+    position: absolute;
+    bottom: 0;
+    z-index: 11;
+    height: 90%;
+    max-width: 60%;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+.idol-overlay.side-left {
+    left: 2%;
+    object-position: left bottom;
+}
+
+.idol-overlay.side-right {
+    right: 2%;
+    object-position: right bottom;
+}
+
+.idol-overlay[hidden] {
+    display: none;
+}
+
+.idol-group-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 4px 4px 16px;
+}
+
+.idol-chip {
+    padding: 6px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: var(--wobble-sm);
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: pointer;
+}
+
+.idol-chip:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--ink);
+}
+
+.idol-chip[aria-checked="true"] {
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.idol-member-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 4px 4px 14px;
+}
+
+.idol-member {
+    flex: 0 0 84px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 6px;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: var(--wobble-sm);
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: pointer;
+}
+
+.idol-member:hover:not(:disabled) {
+    transform: translate(-2px, -2px) rotate(-1deg);
+    box-shadow: 5px 5px 0 var(--ink);
+}
+
+.idol-member[aria-checked="true"] {
+    background: var(--highlight);
+    border-width: 3px;
+    transform: rotate(-2deg);
+}
+
+.idol-member:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.idol-member-pic {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    background: var(--card-bg);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.idol-member-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+}
+
+.idol-member-name {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.idol-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 4px 4px 12px;
+}
+
+.idol-side {
+    display: flex;
+    gap: 8px;
+}
+
+.idol-side-btn {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: var(--wobble-sm);
+    box-shadow: 2px 2px 0 var(--ink);
+    cursor: pointer;
+}
+
+.idol-side-btn[aria-checked="true"] {
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.idol-size {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.idol-size input {
+    width: 140px;
+    accent-color: var(--ink);
 }
 
 /* ---------- Album button ---------- */

@@ -803,7 +803,8 @@ function snapshotVideo(video) {
 }
 
 // Gambar hasil jepretan ke kotak foto (mirror, crop supaya pas)
-function drawShots(shots) {
+// idolFor(shotIndex) opsional: mengembalikan { img, side, size } untuk foto bareng idol
+function drawShots(shots, idolFor) {
     return (ctx, x, y, w, h, shotIndex = 0) => {
         const src = shots[Math.min(shotIndex, shots.length - 1)];
         const vw = src.width || w;
@@ -813,8 +814,15 @@ function drawShots(shots) {
         const sh = h / scale;
         const sx = (vw - sw) / 2;
         const sy = (vh - sh) / 2;
+        ctx.save();
         ctx.translate(x + w, y);
         ctx.scale(-1, 1);
         ctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h);
+        ctx.restore();
+
+        const idol = idolFor && idolFor(shotIndex);
+        if (idol && typeof drawIdol === 'function') {
+            drawIdol(ctx, idol.img, x, y, w, h, idol.side, idol.size);
+        }
     };
 }
