@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LIVE PHOTO GESTURE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Patrick+Hand&family=Pixelify+Sans:wght@400..700&family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
@@ -28,7 +31,7 @@
             </div>
             <div class="stepper-content" id="step4" style="display: none;">
                 <h2>  Ekspresi Wajah</h2>
-                <p>Buka mulut lebar = Ngangap 😲<br>Cemberut = Galau 😡<br>Tutup mulut pakai tangan = Rahasia 🤭</p>
+                <p>Buka mulut lebar = Mangap 😲<br>Cemberut = Galau 😡<br>Tutup mulut pakai tangan = Rahasia 🤭</p>
             </div>
 
             <div class="stepper-footer">
@@ -63,19 +66,43 @@
     </div>
 
     <header>
+        <p class="tagline">~ photobooth online pakai gesture ~</p>
         <h1>LIVE PHOTO GESTURE</h1>
+        <svg class="title-underline" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M3 9 C 50 3, 90 12, 140 7 S 240 3, 297 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        </svg>
     </header>
 
     <div class="main-container">
-        <div class="photo-frame-wrapper">
+        <div class="photo-frame-wrapper booth">
+            <div class="booth-sign" aria-hidden="true">
+                <span class="bulb"></span><span>PHOTO BOOTH</span><span class="bulb"></span>
+            </div>
+            <span class="price-sticker" aria-hidden="true">GRATIS!</span>
             <div class="photo-frame" id="photoFrame">
                 <video id="webcam" autoplay playsinline muted></video>
                 <canvas id="outputCanvas" width="640" height="480"></canvas>
-                <canvas id="captureCanvas" width="640" height="480" style="display: none;"></canvas>
             </div>
             <div class="status-banner" id="statusText" style="background: #d1fae5;">Menunggu...</div>
             <div class="status-banner" id="emotionStatus">Wajah: Menunggu AI...</div>
         </div>
+        <section class="frame-picker" aria-labelledby="framePickerTitle">
+            <div class="frame-picker-head">
+                <h2 id="framePickerTitle">Pilih Bingkai</h2>
+                <span id="frameName" class="frame-name">Polos · 1 Foto</span>
+            </div>
+
+            <div class="frame-preview-wrap">
+                <canvas id="framePreview" class="frame-preview" role="img" aria-label="Pratinjau bingkai"></canvas>
+                <p id="frameShotInfo" class="frame-shot-info"></p>
+            </div>
+
+            <h3 class="frame-subtitle" id="layoutTitle">1. Tata Letak</h3>
+            <div id="layoutList" class="layout-list" role="radiogroup" aria-labelledby="layoutTitle"></div>
+
+            <h3 class="frame-subtitle" id="themeTitle">2. Tema</h3>
+            <div id="frameList" class="frame-list" role="radiogroup" aria-labelledby="themeTitle"></div>
+        </section>
         <button id="albumBtn" class="album-btn">📷 Album (<span id="photoCount">0</span>)</button>
     </div>
 
@@ -132,6 +159,7 @@
 
     <!-- Countdown Overlay -->
     <div id="countdownOverlay" class="countdown-overlay" style="display: none;">
+        <div id="countdownLabel" class="countdown-label"></div>
         <div id="countdownNumber" class="countdown-number">3</div>
     </div>
 
@@ -160,10 +188,20 @@
     <audio id="audioMetal" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/metal.mp3" loop></audio>
     <audio id="audioSarangheyo" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/sarangheyo.mp3" loop></audio>
 
+    <script src="frames.js"></script>
     <script src="script.js"></script>
 
     <footer class="footer">
-        <p><strong>Dibuat dengan ❤️</strong></p>
+        <p class="footer-credit">
+            <span>made by willsyh</span>
+            <a class="footer-ig" href="https://www.instagram.com/willsya_" target="_blank" rel="noopener noreferrer" aria-label="Instagram willsya_" title="@willsya_">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="5"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/>
+                </svg>
+            </a>
+        </p>
     </footer>
 </body>
 </html>

@@ -392,10 +392,9 @@ function runAI() {
 // ==================== FITUR FOTO ====================
 
 // DOM Elements
-const captureCanvas = document.getElementById('captureCanvas');
-const captureCtx = captureCanvas.getContext('2d');
 const countdownOverlay = document.getElementById('countdownOverlay');
 const countdownNumber = document.getElementById('countdownNumber');
+const countdownLabel = document.getElementById('countdownLabel');
 const albumBtn = document.getElementById('albumBtn');
 const albumModal = document.getElementById('albumModal');
 const closeAlbumBtn = document.getElementById('closeAlbumBtn');
@@ -408,11 +407,12 @@ let photos = [];
 let isCountingDown = false;
 let wasFiveFingers = false;
 
-// Supabase Config - from config.js
-const SUPABASE_URL = CONFIG.SUPABASE_URL;
-const SUPABASE_ANON_KEY = CONFIG.SUPABASE_ANON_KEY;
-const AUDIO_BUCKET = CONFIG.AUDIO_BUCKET;
-const PHOTO_BUCKET = CONFIG.PHOTO_BUCKET;
+// Supabase Config - from config.js (opsional; tanpa config.js foto tidak di-upload)
+const APP_CONFIG = (typeof CONFIG !== 'undefined' && CONFIG) || {};
+const SUPABASE_URL = APP_CONFIG.SUPABASE_URL;
+const SUPABASE_ANON_KEY = APP_CONFIG.SUPABASE_ANON_KEY;
+const AUDIO_BUCKET = APP_CONFIG.AUDIO_BUCKET;
+const PHOTO_BUCKET = APP_CONFIG.PHOTO_BUCKET;
 
 // Deteksi gesture 5 jari → kepal untuk trigger foto
 function checkPhotoTrigger(currentHandMode) {
@@ -428,21 +428,32 @@ function checkPhotoTrigger(currentHandMode) {
     }
 }
 
-// Hitung mundur 3-2-1
+// Hitung mundur 3-2-1 (diulang untuk bingkai yang butuh beberapa foto)
 async function startCountdown() {
     isCountingDown = true;
-    countdownOverlay.style.display = 'flex';
+    const frame = buildFrame(selectedThemeId, selectedLayoutId);
+    const totalShots = frame.shots || 1;
+    const shots = [];
 
-    for (let i = 3; i >= 1; i--) {
-        countdownNumber.innerText = i;
-        countdownNumber.style.animation = 'none';
-        countdownNumber.offsetHeight; // trigger reflow
-        countdownNumber.style.animation = 'pulse 0.5s ease-in-out';
-        await sleep(1000);
+    for (let s = 0; s < totalShots; s++) {
+        countdownLabel.innerText = totalShots > 1 ? `Foto ${s + 1} dari ${totalShots}` : '';
+        countdownOverlay.style.display = 'flex';
+
+        for (let i = 3; i >= 1; i--) {
+            countdownNumber.innerText = i;
+            countdownNumber.style.animation = 'none';
+            countdownNumber.offsetHeight; // trigger reflow
+            countdownNumber.style.animation = 'pulse 0.5s ease-in-out';
+            await sleep(1000);
+        }
+
+        countdownOverlay.style.display = 'none';
+        shots.push(snapshotVideo(videoElement));
+        flashEffect();
+        if (s < totalShots - 1) await sleep(900); // jeda ganti pose
     }
 
-    countdownOverlay.style.display = 'none';
-    capturePhoto();
+    savePhoto(frame, shots);
     isCountingDown = false;
 }
 
@@ -450,16 +461,11 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Ambil foto
-function capturePhoto() {
-    // Draw video to capture canvas (with mirror)
-    captureCtx.save();
-    captureCtx.scale(-1, 1);
-    captureCtx.drawImage(videoElement, -captureCanvas.width, 0, captureCanvas.width, captureCanvas.height);
-    captureCtx.restore();
+// Gabungkan jepretan ke bingkai lalu simpan ke album
+function savePhoto(frame, shots) {
+    const framed = renderFramed(frame, drawShots(shots));
 
-    // Convert to blob
-    captureCanvas.toBlob(async (blob) => {
+    framed.toBlob(async (blob) => {
         const timestamp = Date.now();
         const filename = `foto_${timestamp}.jpg`;
 
@@ -476,12 +482,139 @@ function capturePhoto() {
         updatePhotoCount();
         renderAlbum();
 
-        // Flash effect
-        flashEffect();
-
         // Upload ke Supabase
         await uploadToSupabase(photoData);
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg', 0.92);
+}
+
+// ==================== PILIH BINGKAI (TEMA + TATA LETAK) ====================
+const themeList = document.getElementById('frameList');
+const layoutList = document.getElementById('layoutList');
+const frameName = document.getElementById('frameName');
+const framePreview = document.getElementById('framePreview');
+const frameShotInfo = document.getElementById('frameShotInfo');
+
+function readSetting(key, fallback) {
+    try {
+        return localStorage.getItem(key) || fallback;
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function saveSetting(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) { /* localStorage tidak tersedia */ }
+}
+
+// Pilihan lama ('photoFrame') dipakai sebagai tema kalau masih ada
+let selectedThemeId = getTheme(readSetting('photoTheme', readSetting('photoFrame', 'none'))).id;
+let selectedLayoutId = getLayout(readSetting('photoLayout', '1')).id;
+
+function renderPreview() {
+    const frame = buildFrame(selectedThemeId, selectedLayoutId);
+    // pratinjau digambar kecil supaya ringan
+    const scale = Math.min(1, 520 / Math.max(frame.width, frame.height));
+    const img = renderFramed(frame, drawSamplePhoto, scale);
+    framePreview.width = img.width;
+    framePreview.height = img.height;
+    framePreview.getContext('2d').drawImage(img, 0, 0);
+    framePreview.setAttribute('aria-label', `Pratinjau bingkai ${frame.name}`);
+    frameName.innerText = frame.name;
+    frameShotInfo.innerText = frame.shots > 1
+        ? `${frame.shots} kali jepret · hitung mundur tiap foto`
+        : '1 kali jepret';
+}
+
+function markChecked(list, attr, value) {
+    list.querySelectorAll('[role="radio"]').forEach(btn => {
+        btn.setAttribute('aria-checked', btn.dataset[attr] === value);
+    });
+}
+
+function buildThemeList() {
+    themeList.innerHTML = '';
+    THEMES.forEach(theme => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'frame-option';
+        btn.dataset.theme = theme.id;
+        btn.setAttribute('role', 'radio');
+        btn.title = theme.name;
+
+        const frame = buildFrame(theme.id, selectedLayoutId);
+        const thumb = renderFramed(frame, drawSamplePhoto, 180 / Math.max(frame.width, frame.height));
+        thumb.className = 'frame-thumb';
+        const label = document.createElement('span');
+        label.className = 'frame-label';
+        label.innerText = theme.name;
+
+        btn.append(thumb, label);
+        btn.addEventListener('click', () => {
+            selectedThemeId = theme.id;
+            saveSetting('photoTheme', theme.id);
+            markChecked(themeList, 'theme', theme.id);
+            renderPreview();
+        });
+        themeList.appendChild(btn);
+    });
+    markChecked(themeList, 'theme', selectedThemeId);
+}
+
+function buildLayoutList() {
+    layoutList.innerHTML = '';
+    LAYOUTS.forEach(layout => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'layout-option';
+        btn.dataset.layout = layout.id;
+        btn.setAttribute('role', 'radio');
+
+        // ikon kotak-kotak kecil sesuai susunan foto
+        const icon = document.createElement('span');
+        icon.className = 'layout-icon';
+        icon.style.gridTemplateColumns = `repeat(${layout.cols}, 1fr)`;
+        icon.style.aspectRatio = `${layout.cols} / ${layout.rows * (layout.cellAspect || 0.75)}`;
+        for (let i = 0; i < layout.cols * layout.rows; i++) {
+            icon.appendChild(document.createElement('span'));
+        }
+
+        const label = document.createElement('span');
+        label.className = 'frame-label';
+        label.innerText = layout.name;
+        const count = document.createElement('span');
+        count.className = 'layout-count';
+        count.innerText = `${layoutShots(layout)} foto`;
+
+        btn.append(icon, label, count);
+        btn.addEventListener('click', () => {
+            selectedLayoutId = layout.id;
+            saveSetting('photoLayout', layout.id);
+            markChecked(layoutList, 'layout', layout.id);
+            buildThemeList(); // thumbnail tema ikut tata letak yang dipilih
+            renderPreview();
+        });
+        layoutList.appendChild(btn);
+    });
+    markChecked(layoutList, 'layout', selectedLayoutId);
+}
+
+function buildFramePicker() {
+    buildLayoutList();
+    buildThemeList();
+    renderPreview();
+}
+
+// Tunggu font siap supaya teks di thumbnail tidak pakai font cadangan
+buildFramePicker();
+if (document.fonts && document.fonts.load) {
+    Promise.all([
+        document.fonts.load('700 40px "Oswald"'),
+        document.fonts.load('40px "Patrick Hand"'),
+        document.fonts.load('700 40px "Pixelify Sans"'),
+        document.fonts.load('40px "VT323"')
+    ]).then(buildFramePicker).catch(() => {});
 }
 
 // Flash effect saat foto diambil
@@ -501,6 +634,7 @@ function flashEffect() {
 
 // Upload ke Supabase Storage
 async function uploadToSupabase(photoData) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !PHOTO_BUCKET) return;
     photoData.uploading = true;
     renderAlbum();
 
@@ -667,6 +801,7 @@ function applyButtonColor(colorOrGradient) {
     allButtons.forEach(btn => {
         // Skip theme picker buttons and utility buttons
         if (btn.closest('.theme-modal')) return;
+        if (btn.closest('.frame-picker')) return;
         if (btn.id === 'themeBtn') return;
         if (btn.classList.contains('btn-back')) return;
         if (btn.classList.contains('close-album')) return;
@@ -752,6 +887,7 @@ applyCustomColor.addEventListener('click', () => {
 resetThemeBtn.addEventListener('click', () => {
     // Clear all button styles
     document.querySelectorAll('button').forEach(btn => {
+        if (btn.closest('.theme-modal') || btn.closest('.frame-picker')) return;
         btn.style.background = '';
         btn.style.color = '';
     });
