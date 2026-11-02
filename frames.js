@@ -551,12 +551,126 @@ const THEMES = [
     }
 ];
 
+// ---------- Template gambar ----------
+// Bingkai dari file gambar (folder frames/). Susunan fotonya sudah tetap,
+// jadi pilihan tata letak tidak berlaku untuk template.
+// Koordinat slot memakai ukuran gambar asli (width x height):
+// cx, cy = titik tengah kotak foto, w/h = ukuran, rot = kemiringan (derajat), r = sudut bulat.
+// Kotak dibuat sedikit lebih besar dari "AREA FOTO" supaya warna birunya tertutup rapi.
+const TEMPLATES = [
+    {
+        id: 'tpl-strawberry',
+        name: 'Strawberry',
+        template: {
+            src: 'frames/strawberry.jpg', width: 540, height: 960,
+            slots: [
+                { cx: 151.5, cy: 316.6, w: 212, h: 170, rot: -5.7, r: 22 },
+                { cx: 164.5, cy: 466.0, w: 212, h: 170, rot: -4.6, r: 22 },
+                { cx: 176.0, cy: 627.6, w: 212, h: 172, rot: -5.7, r: 22 },
+                { cx: 415.5, cy: 390.0, w: 206, h: 212, rot: 17, r: 25 },
+                { cx: 410.0, cy: 613.0, w: 210, h: 214, rot: 7, r: 25 }
+            ]
+        }
+    },
+    {
+        id: 'tpl-cherry',
+        name: 'Cherry Diary',
+        template: {
+            src: 'frames/cherry-diary.jpg', width: 540, height: 960,
+            slots: [
+                { cx: 331.5, cy: 411.0, w: 196, h: 192, rot: -3.5, r: 25 },
+                { cx: 344.0, cy: 573.3, w: 196, h: 192, rot: -2.8, r: 25 },
+                { cx: 355.5, cy: 743.5, w: 198, h: 200, rot: -3.0, r: 25 }
+            ]
+        }
+    },
+    {
+        id: 'tpl-film',
+        name: 'Kamera Film',
+        template: {
+            src: 'frames/kamera-film.jpg', width: 540, height: 960,
+            slots: [
+                { cx: 270.5, cy: 396.0, w: 150, h: 117 },
+                { cx: 270.5, cy: 516.5, w: 150, h: 124 },
+                { cx: 270.5, cy: 646.5, w: 150, h: 124 },
+                { cx: 269.5, cy: 768.0, w: 152, h: 125 }
+            ]
+        }
+    },
+    {
+        id: 'tpl-kamera-pink',
+        name: 'Kamera Pink',
+        template: {
+            src: 'frames/kamera-pink.jpg', width: 540, height: 960,
+            slots: [
+                { cx: 380.0, cy: 418.0, w: 268, h: 322, r: 20 }
+            ]
+        }
+    }
+];
+
+// Hasil foto template dibuat 2x ukuran gambar asli supaya foto tetap tajam
+const TEMPLATE_SCALE = 2;
+const TEMPLATE_LAYOUT = { id: 'template', name: 'Template', cols: 1, rows: 1 };
+const templateImages = {};
+
+// Muat gambar template; onLoad dipanggil setiap satu gambar selesai dimuat
+function loadTemplateImages(onLoad) {
+    TEMPLATES.forEach(t => {
+        if (templateImages[t.id]) return;
+        const img = new Image();
+        img.onload = () => onLoad && onLoad(t);
+        img.src = t.template.src;
+        templateImages[t.id] = img;
+    });
+}
+
 function getLayout(id) {
     return LAYOUTS.find(l => l.id === id) || LAYOUTS[0];
 }
 
 function getTheme(id) {
-    return THEMES.find(t => t.id === id) || THEMES[0];
+    return THEMES.find(t => t.id === id) || TEMPLATES.find(t => t.id === id) || THEMES[0];
+}
+
+function buildTemplateFrame(theme) {
+    const T = theme.template;
+    const k = TEMPLATE_SCALE;
+    const slots = T.slots.map((s, i) => ({
+        x: (s.cx - s.w / 2) * k,
+        y: (s.cy - s.h / 2) * k,
+        w: s.w * k,
+        h: s.h * k,
+        rot: s.rot || 0,
+        radius: (s.r || 0) * k,
+        row: i,
+        col: 0,
+        shot: i
+    }));
+    const width = T.width * k;
+    const height = T.height * k;
+    return {
+        theme,
+        layout: TEMPLATE_LAYOUT,
+        isTemplate: true,
+        name: theme.name,
+        width,
+        height,
+        u: 1,
+        grid: { x: 0, y: 0, w: width, h: height },
+        slots,
+        shots: slots.length,
+        filter: theme.filter,
+        background(ctx, f) {
+            const img = templateImages[theme.id];
+            if (img && img.complete && img.naturalWidth) {
+                ctx.drawImage(img, 0, 0, f.width, f.height);
+            } else {
+                ctx.fillStyle = '#ece6d6';
+                ctx.fillRect(0, 0, f.width, f.height);
+            }
+        }
+    };
 }
 
 function layoutShots(layout) {
@@ -566,6 +680,7 @@ function layoutShots(layout) {
 // Gabungkan tema + tata letak jadi satu bingkai siap pakai
 function buildFrame(themeId, layoutId) {
     const theme = getTheme(themeId);
+    if (theme.template) return buildTemplateFrame(theme);
     const layout = getLayout(layoutId);
     const u = layout.gridWidth / 640;
 
@@ -628,13 +743,22 @@ function renderFramed(frame, drawPhoto, scale = 1) {
 
     if (frame.background) frame.background(ctx, frame);
 
+    // Kotak foto bisa miring (rot) dan bersudut bulat (radius)
     frame.slots.forEach(slot => {
         ctx.save();
-        ctx.beginPath();
-        ctx.rect(slot.x, slot.y, slot.w, slot.h);
+        ctx.translate(slot.x + slot.w / 2, slot.y + slot.h / 2);
+        if (slot.rot) ctx.rotate((slot.rot * Math.PI) / 180);
+        const x = -slot.w / 2;
+        const y = -slot.h / 2;
+        if (slot.radius) {
+            roundRect(ctx, x, y, slot.w, slot.h, slot.radius);
+        } else {
+            ctx.beginPath();
+            ctx.rect(x, y, slot.w, slot.h);
+        }
         ctx.clip();
         if (frame.filter) ctx.filter = frame.filter;
-        drawPhoto(ctx, slot.x, slot.y, slot.w, slot.h, slot.shot);
+        drawPhoto(ctx, x, y, slot.w, slot.h, slot.shot);
         ctx.restore();
     });
 

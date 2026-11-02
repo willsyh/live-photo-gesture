@@ -465,7 +465,7 @@ function sleep(ms) {
 function savePhoto(frame, shots) {
     const framed = renderFramed(frame, drawShots(shots));
 
-    framed.toBlob(async (blob) => {
+    const onBlob = async (blob) => {
         const timestamp = Date.now();
         const filename = `foto_${timestamp}.jpg`;
 
@@ -484,12 +484,22 @@ function savePhoto(frame, shots) {
 
         // Upload ke Supabase
         await uploadToSupabase(photoData);
-    }, 'image/jpeg', 0.92);
+    };
+
+    try {
+        framed.toBlob(onBlob, 'image/jpeg', 0.92);
+    } catch (err) {
+        // Terjadi kalau halaman dibuka langsung dari file (file://) dan memakai template gambar
+        console.error('Gagal menyimpan foto:', err);
+        alert('Foto dengan template gambar tidak bisa disimpan kalau halaman dibuka langsung dari file. Buka lewat server (misalnya Live Server atau situs Vercel).');
+    }
 }
 
-// ==================== PILIH BINGKAI (TEMA + TATA LETAK) ====================
+// ==================== PILIH BINGKAI (TEMA + TATA LETAK + TEMPLATE) ====================
 const themeList = document.getElementById('frameList');
+const templateList = document.getElementById('templateList');
 const layoutList = document.getElementById('layoutList');
+const layoutNote = document.getElementById('layoutNote');
 const frameName = document.getElementById('frameName');
 const framePreview = document.getElementById('framePreview');
 const frameShotInfo = document.getElementById('frameShotInfo');
@@ -512,6 +522,10 @@ function saveSetting(key, value) {
 let selectedThemeId = getTheme(readSetting('photoTheme', readSetting('photoFrame', 'none'))).id;
 let selectedLayoutId = getLayout(readSetting('photoLayout', '1')).id;
 
+function isTemplateSelected() {
+    return Boolean(getTheme(selectedThemeId).template);
+}
+
 function renderPreview() {
     const frame = buildFrame(selectedThemeId, selectedLayoutId);
     // pratinjau digambar kecil supaya ringan
@@ -533,33 +547,55 @@ function markChecked(list, attr, value) {
     });
 }
 
+// Template punya susunan foto sendiri, jadi tata letak dinonaktifkan
+function updateLayoutState() {
+    const locked = isTemplateSelected();
+    layoutList.classList.toggle('is-locked', locked);
+    layoutList.querySelectorAll('button').forEach(btn => {
+        btn.disabled = locked;
+    });
+    layoutNote.hidden = !locked;
+}
+
+function selectTheme(id) {
+    selectedThemeId = id;
+    saveSetting('photoTheme', id);
+    markChecked(themeList, 'theme', id);
+    markChecked(templateList, 'theme', id);
+    updateLayoutState();
+    renderPreview();
+}
+
+function makeThemeButton(theme) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'frame-option';
+    btn.dataset.theme = theme.id;
+    btn.setAttribute('role', 'radio');
+    btn.title = theme.name;
+
+    const frame = buildFrame(theme.id, selectedLayoutId);
+    const thumb = renderFramed(frame, drawSamplePhoto, 180 / Math.max(frame.width, frame.height));
+    thumb.className = 'frame-thumb';
+    const label = document.createElement('span');
+    label.className = 'frame-label';
+    label.innerText = theme.name;
+
+    btn.append(thumb, label);
+    btn.addEventListener('click', () => selectTheme(theme.id));
+    return btn;
+}
+
 function buildThemeList() {
     themeList.innerHTML = '';
-    THEMES.forEach(theme => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'frame-option';
-        btn.dataset.theme = theme.id;
-        btn.setAttribute('role', 'radio');
-        btn.title = theme.name;
-
-        const frame = buildFrame(theme.id, selectedLayoutId);
-        const thumb = renderFramed(frame, drawSamplePhoto, 180 / Math.max(frame.width, frame.height));
-        thumb.className = 'frame-thumb';
-        const label = document.createElement('span');
-        label.className = 'frame-label';
-        label.innerText = theme.name;
-
-        btn.append(thumb, label);
-        btn.addEventListener('click', () => {
-            selectedThemeId = theme.id;
-            saveSetting('photoTheme', theme.id);
-            markChecked(themeList, 'theme', theme.id);
-            renderPreview();
-        });
-        themeList.appendChild(btn);
-    });
+    THEMES.forEach(theme => themeList.appendChild(makeThemeButton(theme)));
     markChecked(themeList, 'theme', selectedThemeId);
+}
+
+function buildTemplateList() {
+    templateList.innerHTML = '';
+    TEMPLATES.forEach(theme => templateList.appendChild(makeThemeButton(theme)));
+    markChecked(templateList, 'theme', selectedThemeId);
 }
 
 function buildLayoutList() {
@@ -603,11 +639,20 @@ function buildLayoutList() {
 function buildFramePicker() {
     buildLayoutList();
     buildThemeList();
+    buildTemplateList();
+    updateLayoutState();
     renderPreview();
 }
 
-// Tunggu font siap supaya teks di thumbnail tidak pakai font cadangan
 buildFramePicker();
+
+// Gambar template dimuat terpisah; perbarui thumbnail setelah gambarnya siap
+loadTemplateImages(() => {
+    buildTemplateList();
+    if (isTemplateSelected()) renderPreview();
+});
+
+// Tunggu font siap supaya teks di thumbnail tidak pakai font cadangan
 if (document.fonts && document.fonts.load) {
     Promise.all([
         document.fonts.load('700 40px "Oswald"'),

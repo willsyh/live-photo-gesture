@@ -99,11 +99,15 @@
 
             <h3 class="frame-subtitle" id="layoutTitle">1. Tata Letak</h3>
             <div id="layoutList" class="layout-list" role="radiogroup" aria-labelledby="layoutTitle"></div>
+            <p id="layoutNote" class="layout-note" hidden>Template gambar punya susunan foto sendiri. Pilih tema di nomor 2 untuk memakai tata letak.</p>
 
             <h3 class="frame-subtitle" id="themeTitle">2. Tema</h3>
             <div id="frameList" class="frame-list" role="radiogroup" aria-labelledby="themeTitle"></div>
+
+            <h3 class="frame-subtitle" id="templateTitle">3. Template Gambar</h3>
+            <div id="templateList" class="frame-list" role="radiogroup" aria-labelledby="templateTitle"></div>
         </section>
-        <button id="albumBtn" class="album-btn">📷 Album (<span id="photoCount">0</span>)</button>
+        <button id="albumBtn" class="album-btn"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Album (<span id="photoCount">0</span>)</span></button>
     </div>
 
     <!-- Floating Theme Button -->
@@ -167,7 +171,7 @@
     <div id="albumModal" class="album-modal" style="display: none;">
         <div class="album-container">
             <div class="album-header">
-                <h2>📷 Album Foto</h2>
+                <h2><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Album Foto</span></h2>
                 <button id="closeAlbumBtn" class="close-album">Tutup</button>
             </div>
             <div id="albumGrid" class="album-grid">

@@ -632,6 +632,31 @@ canvas {
     transform: rotate(-2deg);
 }
 
+.layout-list.is-locked .layout-option {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 2px 2px 0 var(--ink);
+}
+
+.layout-list.is-locked .layout-option[aria-checked="true"] {
+    background: var(--paper);
+}
+
+.layout-note {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    background: var(--highlight);
+    border: 2px dashed var(--ink);
+    border-radius: var(--wobble-sm);
+    padding: 8px 12px;
+    margin: -4px 4px 16px;
+}
+
+.layout-note[hidden] {
+    display: none;
+}
+
 .layout-icon {
     display: grid;
     gap: 3px;
@@ -654,6 +679,24 @@ canvas {
 }
 
 /* ---------- Album button ---------- */
+.icon {
+    width: 1.2em;
+    height: 1.2em;
+    flex-shrink: 0;
+}
+
+.album-btn,
+.album-header h2 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.album-header h2 {
+    justify-content: flex-start;
+}
+
 .album-btn {
     width: 100%;
     padding: 16px;
