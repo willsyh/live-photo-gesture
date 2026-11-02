@@ -434,13 +434,10 @@ async function startCountdown() {
     const frame = buildFrame(selectedThemeId, selectedLayoutId);
     const totalShots = frame.shots || 1;
     const shots = [];
-    shuffleIdolPoses();
-    const idolPlan = idolPlanFor(totalShots);
 
     for (let s = 0; s < totalShots; s++) {
         countdownLabel.innerText = totalShots > 1 ? `Foto ${s + 1} dari ${totalShots}` : '';
         countdownOverlay.style.display = 'flex';
-        if (idolPlan.length) showIdolOverlay(idolPlan[s]);
 
         for (let i = 3; i >= 1; i--) {
             countdownNumber.innerText = i;
@@ -456,8 +453,7 @@ async function startCountdown() {
         if (s < totalShots - 1) await sleep(900); // jeda ganti pose
     }
 
-    updateIdolView();
-    savePhoto(frame, shots, idolPlan);
+    savePhoto(frame, shots);
     isCountingDown = false;
 }
 
@@ -466,8 +462,8 @@ function sleep(ms) {
 }
 
 // Gabungkan jepretan ke bingkai lalu simpan ke album
-function savePhoto(frame, shots, idolPlan = []) {
-    const framed = renderFramed(frame, drawShots(shots, i => idolPlan[i]));
+function savePhoto(frame, shots) {
+    const framed = renderFramed(frame, drawShots(shots));
 
     const onBlob = async (blob) => {
         const timestamp = Date.now();
@@ -498,236 +494,6 @@ function savePhoto(frame, shots, idolPlan = []) {
         alert('Foto dengan template gambar tidak bisa disimpan kalau halaman dibuka langsung dari file. Buka lewat server (misalnya Live Server atau situs Vercel).');
     }
 }
-
-// ==================== FOTO BARENG IDOL ====================
-const idolOverlay = document.getElementById('idolOverlay');
-const idolGroupList = document.getElementById('idolGroupList');
-const idolMemberList = document.getElementById('idolMemberList');
-const idolOptions = document.getElementById('idolOptions');
-const idolName = document.getElementById('idolName');
-const idolMissing = document.getElementById('idolMissing');
-const idolSizeInput = document.getElementById('idolSize');
-const idolSideButtons = document.querySelectorAll('.idol-side-btn');
-
-// Pratinjau bingkai baru boleh digambar setelah bagian bingkai siap
-let framePreviewReady = false;
-
-const idolState = {
-    group: readSetting('idolGroup', 'none'),
-    member: readSetting('idolMember', 'all'),
-    side: readSetting('idolSide', 'right') === 'left' ? 'left' : 'right',
-    size: Number(readSetting('idolSize', '90')) || 90
-};
-if (!getIdolGroup(idolState.group)) idolState.group = 'none';
-
-function saveIdolState() {
-    saveSetting('idolGroup', idolState.group);
-    saveSetting('idolMember', idolState.member);
-    saveSetting('idolSide', idolState.side);
-    saveSetting('idolSize', String(idolState.size));
-}
-
-// Semua gambar pose milik member (dimuat sekali, lalu disimpan di cache)
-function idolPoseImages(group, member) {
-    return idolSrcs(group, member).map(src => loadIdolImage(src, onIdolImagesChanged));
-}
-
-function readyIdolPoses(group, member) {
-    return idolPoseImages(group, member).filter(idolReady);
-}
-
-// Titik awal urutan pose; diacak setiap kali mulai jepret supaya posenya bervariasi
-let idolPoseOffset = 0;
-
-// Member yang dipakai, sesuai pilihan (satu member, atau semua yang fotonya ada)
-function activeIdolMembers() {
-    const group = getIdolGroup(idolState.group);
-    if (!group) return [];
-    const available = group.members.filter(m => readyIdolPoses(group, m).length > 0);
-    if (idolState.member === 'all') return available;
-    return available.filter(m => m.id === idolState.member);
-}
-
-// Rencana idol per jepretan: member bergantian (kalau "Semua"),
-// dan tiap jepretan memakai pose berikutnya dari member itu.
-function idolPlanFor(totalShots) {
-    const group = getIdolGroup(idolState.group);
-    const members = activeIdolMembers();
-    if (!group || members.length === 0) return [];
-    const size = idolState.size / 100;
-    return Array.from({ length: totalShots }, (_, i) => {
-        const member = members[i % members.length];
-        const poses = readyIdolPoses(group, member);
-        const round = Math.floor(i / members.length);
-        return {
-            member,
-            img: poses[(idolPoseOffset + round) % poses.length],
-            side: idolState.side,
-            size
-        };
-    });
-}
-
-function shuffleIdolPoses() {
-    idolPoseOffset = Math.floor(Math.random() * 1000);
-}
-
-function showIdolOverlay(plan) {
-    if (!plan) {
-        idolOverlay.hidden = true;
-        idolOverlay.removeAttribute('src');
-        return;
-    }
-    idolOverlay.src = plan.img.src;
-    idolOverlay.alt = plan.member.name;
-    idolOverlay.className = `idol-overlay side-${plan.side}`;
-    idolOverlay.style.height = `${idolState.size}%`;
-    idolOverlay.hidden = false;
-}
-
-function updateIdolView() {
-    const group = getIdolGroup(idolState.group);
-    const plan = idolPlanFor(1)[0];
-    showIdolOverlay(plan);
-
-    if (!group) {
-        idolName.innerText = 'Tanpa idol';
-    } else if (idolState.member === 'all') {
-        idolName.innerText = `${group.name} · Semua`;
-    } else {
-        const m = group.members.find(x => x.id === idolState.member);
-        idolName.innerText = `${group.name} · ${m ? m.name : ''}`;
-    }
-
-    idolSideButtons.forEach(btn => btn.setAttribute('aria-checked', btn.dataset.side === idolState.side));
-    idolSizeInput.value = idolState.size;
-}
-
-function makeIdolChip(label, value, attr, current, onClick) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'idol-chip';
-    btn.dataset[attr] = value;
-    btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-checked', value === current);
-    btn.innerText = label;
-    btn.addEventListener('click', onClick);
-    return btn;
-}
-
-function buildIdolGroupList() {
-    idolGroupList.innerHTML = '';
-    idolGroupList.appendChild(makeIdolChip('Tanpa Idol', 'none', 'group', idolState.group, () => selectIdolGroup('none')));
-    IDOL_GROUPS.forEach(g => {
-        idolGroupList.appendChild(makeIdolChip(g.name, g.id, 'group', idolState.group, () => selectIdolGroup(g.id)));
-    });
-}
-
-function buildIdolMemberList() {
-    const group = getIdolGroup(idolState.group);
-    idolOptions.hidden = !group;
-    idolMemberList.innerHTML = '';
-    if (!group) return;
-
-    const missing = [];
-    const makeMemberBtn = (id, name, img) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'idol-member';
-        btn.dataset.member = id;
-        btn.setAttribute('role', 'radio');
-        btn.setAttribute('aria-checked', id === idolState.member);
-
-        const pic = document.createElement('span');
-        pic.className = 'idol-member-pic';
-        if (img && idolReady(img)) {
-            const el = document.createElement('img');
-            el.src = img.src;
-            el.alt = '';
-            pic.appendChild(el);
-        } else {
-            pic.innerText = id === 'all' ? '★' : name.charAt(0);
-        }
-        const label = document.createElement('span');
-        label.className = 'idol-member-name';
-        label.innerText = name;
-        btn.append(pic, label);
-        btn.addEventListener('click', () => {
-            idolState.member = id;
-            saveIdolState();
-            buildIdolMemberList();
-            onIdolSettingsChanged();
-        });
-        return btn;
-    };
-
-    let readyCount = 0;
-    const memberButtons = group.members.map(m => {
-        const poses = idolPoseImages(group, m);
-        const readyPoses = poses.filter(idolReady);
-        const ready = readyPoses.length > 0;
-        if (ready) readyCount++;
-        else if (poses.every(img => img.dataset.missing)) missing.push(m);
-        const btn = makeMemberBtn(m.id, m.name, readyPoses[0]);
-        if (ready && poses.length > 1) btn.title = `${readyPoses.length} pose`;
-        if (!ready) {
-            btn.disabled = true;
-            btn.title = 'Foto belum ada';
-        }
-        return btn;
-    });
-
-    const allBtn = makeMemberBtn('all', 'Semua', null);
-    allBtn.title = 'Ganti member tiap jepretan';
-    allBtn.disabled = readyCount === 0;
-    idolMemberList.append(allBtn, ...memberButtons);
-
-    if (missing.length) {
-        idolMissing.hidden = false;
-        idolMissing.innerText = `Foto belum ada: ${missing.map(m => m.name).join(', ')}. ` +
-            `Taruh file PNG transparan di folder idols/${group.id}/ (contoh: idols/${group.id}/${missing[0].id}.png).`;
-    } else {
-        idolMissing.hidden = true;
-    }
-}
-
-function selectIdolGroup(id) {
-    idolState.group = id;
-    idolState.member = 'all';
-    saveIdolState();
-    buildIdolGroupList();
-    buildIdolMemberList();
-    onIdolSettingsChanged();
-}
-
-function onIdolSettingsChanged() {
-    updateIdolView();
-    if (typeof renderPreview === 'function' && framePreviewReady) renderPreview();
-}
-
-// Dipanggil setiap ada foto member yang selesai dimuat (atau gagal dimuat)
-function onIdolImagesChanged() {
-    buildIdolMemberList();
-    onIdolSettingsChanged();
-}
-
-idolSideButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        idolState.side = btn.dataset.side;
-        saveIdolState();
-        onIdolSettingsChanged();
-    });
-});
-
-idolSizeInput.addEventListener('input', () => {
-    idolState.size = Number(idolSizeInput.value);
-    saveIdolState();
-    onIdolSettingsChanged();
-});
-
-buildIdolGroupList();
-buildIdolMemberList();
-updateIdolView();
 
 // ==================== PILIH BINGKAI (TEMA + TATA LETAK + TEMPLATE) ====================
 const themeList = document.getElementById('frameList');
@@ -764,12 +530,7 @@ function renderPreview() {
     const frame = buildFrame(selectedThemeId, selectedLayoutId);
     // pratinjau digambar kecil supaya ringan
     const scale = Math.min(1, 520 / Math.max(frame.width, frame.height));
-    const plan = idolPlanFor(frame.shots);
-    const img = renderFramed(frame, (ctx, x, y, w, h, shot) => {
-        drawSamplePhoto(ctx, x, y, w, h, shot);
-        const p = plan[shot];
-        if (p) drawIdol(ctx, p.img, x, y, w, h, p.side, p.size);
-    }, scale);
+    const img = renderFramed(frame, drawSamplePhoto, scale);
     framePreview.width = img.width;
     framePreview.height = img.height;
     framePreview.getContext('2d').drawImage(img, 0, 0);
@@ -884,7 +645,6 @@ function buildFramePicker() {
 }
 
 buildFramePicker();
-framePreviewReady = true;
 
 // Gambar template dimuat terpisah; perbarui thumbnail setelah gambarnya siap
 loadTemplateImages(() => {
@@ -1086,7 +846,7 @@ function applyButtonColor(colorOrGradient) {
     allButtons.forEach(btn => {
         // Skip theme picker buttons and utility buttons
         if (btn.closest('.theme-modal')) return;
-        if (btn.closest('.frame-picker') || btn.closest('.idol-picker')) return;
+        if (btn.closest('.frame-picker') || btn.closest('.site-nav')) return;
         if (btn.id === 'themeBtn') return;
         if (btn.classList.contains('btn-back')) return;
         if (btn.classList.contains('close-album')) return;
@@ -1172,7 +932,7 @@ applyCustomColor.addEventListener('click', () => {
 resetThemeBtn.addEventListener('click', () => {
     // Clear all button styles
     document.querySelectorAll('button').forEach(btn => {
-        if (btn.closest('.theme-modal') || btn.closest('.frame-picker') || btn.closest('.idol-picker')) return;
+        if (btn.closest('.theme-modal') || btn.closest('.frame-picker')) return;
         btn.style.background = '';
         btn.style.color = '';
     });

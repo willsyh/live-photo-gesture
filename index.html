@@ -71,6 +71,10 @@
         <svg class="title-underline" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true">
             <path d="M3 9 C 50 3, 90 12, 140 7 S 240 3, 297 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
         </svg>
+        <nav class="site-nav" aria-label="Menu utama">
+            <a href="index.html" class="site-nav-link" aria-current="page">Photobooth Gesture</a>
+            <a href="idol.html" class="site-nav-link">Foto Bareng Idol</a>
+        </nav>
     </header>
 
     <div class="main-container">
@@ -82,38 +86,10 @@
             <div class="photo-frame" id="photoFrame">
                 <video id="webcam" autoplay playsinline muted></video>
                 <canvas id="outputCanvas" width="640" height="480"></canvas>
-                <img id="idolOverlay" class="idol-overlay side-right" alt="" hidden>
             </div>
             <div class="status-banner" id="statusText" style="background: #d1fae5;">Menunggu...</div>
             <div class="status-banner" id="emotionStatus">Wajah: Menunggu AI...</div>
         </div>
-        <section class="idol-picker" aria-labelledby="idolTitle">
-            <div class="frame-picker-head">
-                <h2 id="idolTitle">Foto Bareng Idol</h2>
-                <span id="idolName" class="frame-name">Tanpa idol</span>
-            </div>
-
-            <h3 class="frame-subtitle" id="idolGroupTitle">Grup</h3>
-            <div id="idolGroupList" class="idol-group-list" role="radiogroup" aria-labelledby="idolGroupTitle"></div>
-
-            <div id="idolOptions" hidden>
-                <h3 class="frame-subtitle" id="idolMemberTitle">Member</h3>
-                <div id="idolMemberList" class="idol-member-list" role="radiogroup" aria-labelledby="idolMemberTitle"></div>
-
-                <div class="idol-controls">
-                    <div class="idol-side" role="radiogroup" aria-label="Posisi idol di foto">
-                        <button type="button" class="idol-side-btn" data-side="left" role="radio">◀ Kiri</button>
-                        <button type="button" class="idol-side-btn" data-side="right" role="radio">Kanan ▶</button>
-                    </div>
-                    <label class="idol-size" for="idolSize">
-                        Ukuran
-                        <input type="range" id="idolSize" min="55" max="100" step="5" value="90">
-                    </label>
-                </div>
-                <p id="idolMissing" class="layout-note" hidden></p>
-            </div>
-        </section>
-
         <section class="frame-picker" aria-labelledby="framePickerTitle">
             <div class="frame-picker-head">
                 <h2 id="framePickerTitle">Pilih Bingkai</h2>
@@ -220,7 +196,6 @@
     <audio id="audioMetal" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/metal.mp3" loop></audio>
     <audio id="audioSarangheyo" src="https://hzrfcxtpmfkbmmfieryd.supabase.co/storage/v1/object/public/audio-assets/sarangheyo.mp3" loop></audio>
 
-    <script src="idols.js"></script>
     <script src="frames.js"></script>
     <script src="script.js"></script>
 

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foto Bareng Idol · LIVE PHOTO GESTURE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Patrick+Hand&family=Archivo+Black&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="idol-page">
+
+    <header>
+        <p class="tagline">~ photobooth bareng bias ~</p>
+        <h1>FOTO BARENG IDOL</h1>
+        <svg class="title-underline" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M3 9 C 50 3, 90 12, 140 7 S 240 3, 297 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <nav class="site-nav" aria-label="Menu utama">
+            <a href="index.html" class="site-nav-link">Photobooth Gesture</a>
+            <a href="idol.html" class="site-nav-link" aria-current="page">Foto Bareng Idol</a>
+        </nav>
+    </header>
+
+    <main class="ib-layout">
+        <!-- Pratinjau strip (kiri) -->
+        <aside class="ib-preview-col">
+            <div class="ib-preview-card">
+                <canvas id="ibPreview" class="ib-preview" role="img" aria-label="Pratinjau strip foto"></canvas>
+            </div>
+            <p id="ibCameraStatus" class="ib-camera-status">Menyalakan kamera...</p>
+        </aside>
+
+        <!-- Pengaturan (kanan) -->
+        <section class="ib-controls">
+
+            <!-- 01 Bingkai -->
+            <div class="ib-step" id="stepFrame">
+                <p class="ib-step-num">01</p>
+                <h2 class="ib-step-title">Pilih bingkai</h2>
+
+                <p class="ib-label">Warna strip</p>
+                <div id="ibStyleList" class="ib-chips" role="radiogroup" aria-label="Warna strip"></div>
+
+                <p class="ib-label">Jumlah foto</p>
+                <div id="ibCountList" class="ib-chips" role="radiogroup" aria-label="Jumlah foto"></div>
+
+                <label class="ib-label" for="ibTitleInput">Tulisan di bawah</label>
+                <input id="ibTitleInput" class="ib-input" type="text" maxlength="16" placeholder="Otomatis (nama member)">
+            </div>
+
+            <!-- 02 Foto -->
+            <div class="ib-step" id="stepShoot">
+                <p class="ib-step-num">02</p>
+                <h2 class="ib-step-title">Atur &amp; ambil foto</h2>
+
+                <div id="ibShotTabs" class="ib-shot-tabs" role="tablist" aria-label="Pilih shot"></div>
+                <p id="ibNextUp" class="ib-next-up"></p>
+
+                <div class="ib-who-card">
+                    <h3 id="ibWhoTitle" class="ib-who-title">Siapa di shot 1</h3>
+                    <div id="ibMemberList" class="ib-chips" role="radiogroup" aria-labelledby="ibWhoTitle"></div>
+                    <div id="ibPoseGrid" class="ib-pose-grid" role="radiogroup" aria-label="Pilih pose"></div>
+                    <div class="ib-chips">
+                        <button type="button" id="ibNobodyBtn" class="ib-chip">Tanpa member, cuma aku</button>
+                        <button type="button" id="ibUploadBtn" class="ib-chip">Upload foto member sendiri</button>
+                        <button type="button" id="ibApplyAllBtn" class="ib-chip ib-chip-ghost">Pakai untuk semua shot</button>
+                        <input type="file" id="ibUploadInput" accept="image/png,image/webp,image/*" hidden>
+                    </div>
+                </div>
+
+                <p class="ib-label">Filter</p>
+                <div id="ibFilterList" class="ib-chips" role="radiogroup" aria-label="Filter"></div>
+
+                <p class="ib-label">Member berdiri di</p>
+                <div id="ibSideList" class="ib-chips" role="radiogroup" aria-label="Posisi member"></div>
+
+                <p class="ib-label">Ukuran &amp; posisi member</p>
+                <div class="ib-sliders">
+                    <label class="ib-slider">Ukuran <input type="range" id="ibSize" min="60" max="120" step="5" value="95"></label>
+                    <label class="ib-slider">Geser <input type="range" id="ibShift" min="-30" max="30" step="2" value="0"></label>
+                </div>
+
+                <div class="ib-chips">
+                    <button type="button" id="ibShuffleBtn" class="ib-chip">Acak pose</button>
+                    <button type="button" id="ibMirrorBtn" class="ib-chip" aria-pressed="true">Mirror kamera</button>
+                    <button type="button" id="ibCameraBtn" class="ib-chip" aria-pressed="true">Kamera nyala</button>
+                </div>
+
+                <div class="ib-shoot-actions">
+                    <button type="button" id="ibShootBtn" class="ib-btn ib-btn-primary">Ambil shot 1</button>
+                    <button type="button" id="ibAutoBtn" class="ib-btn">Foto semua otomatis</button>
+                </div>
+                <p class="ib-hint">Tips: tekan tombol <kbd>Spasi</kbd> untuk ambil foto.</p>
+            </div>
+
+            <!-- 03 Simpan -->
+            <div class="ib-step" id="stepSave">
+                <p class="ib-step-num">03</p>
+                <h2 class="ib-step-title">Simpan strip</h2>
+                <p id="ibSaveHint" class="ib-hint">Ambil semua shot dulu, lalu simpan stripnya.</p>
+                <div class="ib-shoot-actions">
+                    <button type="button" id="ibDownloadBtn" class="ib-btn ib-btn-primary" disabled>Download</button>
+                    <button type="button" id="ibShareBtn" class="ib-btn" disabled>Share</button>
+                </div>
+                <div class="ib-chips">
+                    <button type="button" id="ibChangeFrameBtn" class="ib-chip">← Ganti bingkai</button>
+                    <button type="button" id="ibResetBtn" class="ib-chip">Mulai ulang</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Video kamera (tidak ditampilkan; gambarnya dipakai di pratinjau) -->
+    <video id="ibVideo" class="ib-video" autoplay playsinline muted></video>
+
+    <div id="countdownOverlay" class="countdown-overlay" style="display: none;">
+        <div id="countdownLabel" class="countdown-label"></div>
+        <div id="countdownNumber" class="countdown-number">3</div>
+    </div>
+
+    <footer class="footer">
+        <p class="footer-credit">
+            <span>made by willsyh</span>
+            <a class="footer-ig" href="https://www.instagram.com/willsya_" target="_blank" rel="noopener noreferrer" aria-label="Instagram willsya_" title="@willsya_">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="5"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/>
+                </svg>
+            </a>
+        </p>
+    </footer>
+
+    <script src="idols.js"></script>
+    <script src="frames.js"></script>
+    <script src="idol-booth.js"></script>
+</body>
+</html>
