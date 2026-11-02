@@ -1430,6 +1430,11 @@ button.color-changing {
     margin-top: 12px;
 }
 
+/* jarak tombol "Ganti bingkai" & "Mulai ulang" dari tombol besar di atasnya */
+.ib-shoot-actions + .ib-chips {
+    margin-top: 22px;
+}
+
 .ib-chip {
     display: inline-flex;
     align-items: center;
