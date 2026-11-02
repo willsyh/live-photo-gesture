@@ -1698,3 +1698,166 @@ button.color-changing {
     backdrop-filter: none;
     pointer-events: none;
 }
+
+/* ---------- Halaman idol: pilih grup ---------- */
+.ib-layout[hidden],
+.ib-group-picker[hidden] {
+    display: none;
+}
+
+.ib-group-picker {
+    width: 100%;
+    max-width: 860px;
+    background: var(--card-bg);
+    border: 3px solid var(--ink);
+    border-radius: var(--wobble);
+    box-shadow: 8px 8px 0 var(--ink);
+    padding: 26px 26px 30px;
+}
+
+.ib-category {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 26px 0 12px;
+}
+
+.ib-category::after {
+    content: "";
+    flex: 1;
+    border-bottom: 2px dashed var(--ink);
+}
+
+.ib-group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
+}
+
+.ib-group-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 12px 16px;
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: var(--wobble-sm);
+    box-shadow: 4px 4px 0 var(--ink);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.ib-group-card:hover:not(:disabled) {
+    transform: translate(-2px, -2px) rotate(-1deg);
+    box-shadow: 6px 6px 0 var(--ink);
+    background: var(--highlight);
+}
+
+.ib-group-card:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.ib-group-faces {
+    display: flex;
+    justify-content: center;
+    padding-left: 14px;
+}
+
+.ib-group-face {
+    width: 52px;
+    height: 52px;
+    margin-left: -14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--card-bg);
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+}
+
+.ib-group-face img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+}
+
+.ib-group-name {
+    font-family: "Archivo Black", var(--font-display);
+    font-size: 1.35rem;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.ib-group-meta {
+    font-size: 1rem;
+    color: var(--ink-soft);
+}
+
+.ib-group-badge {
+    position: absolute;
+    top: -12px;
+    right: -8px;
+    padding: 3px 10px;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--accent-pink);
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    transform: rotate(6deg);
+}
+
+.ib-group-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    font-size: 1.1rem;
+    background: var(--card-bg);
+    border: 2.5px solid var(--ink);
+    border-radius: var(--wobble-sm);
+    box-shadow: 4px 4px 0 var(--ink);
+}
+
+.ib-group-bar strong {
+    font-family: "Archivo Black", var(--font-display);
+    font-weight: 400;
+}
+
+/* logo grup (kalau ada file logonya) */
+.ib-group-logo {
+    display: block;
+    max-width: 80%;
+    max-height: 46px;
+    object-fit: contain;
+}
+
+.ib-group-card:disabled .ib-group-logo {
+    filter: grayscale(1);
+}
+
+.ib-group-bar-logo {
+    display: inline-block;
+    height: 26px;
+    max-width: 140px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-left: 4px;
+}

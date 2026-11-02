@@ -41,7 +41,8 @@ const COUNTS = [
     { id: '4', name: '4 foto' }
 ];
 
-const GROUP = IDOL_GROUPS[0];
+// grup yang sedang dipakai (dipilih di layar pertama)
+let GROUP = IDOL_GROUPS[0];
 
 // ---------- Ukuran strip ----------
 const STRIP = { w: 600, slotX: 40, slotW: 520, slotH: 390, top: 64, gap: 28, bottom: 210, border: 10, radius: 22 };
@@ -1348,6 +1349,102 @@ document.addEventListener('keydown', e => {
     shootCurrent();
 });
 
+// ---------- Pilih grup ----------
+const groupPicker = $('ibGroupPicker');
+const mainLayout = $('ibMain');
+
+function buildGroupPicker() {
+    groupPicker.querySelectorAll('.ib-group-grid').forEach(grid => {
+        grid.innerHTML = '';
+        IDOL_GROUPS.filter(g => g.type === grid.dataset.type).forEach(group => {
+            const available = groupAvailable(group);
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'ib-group-card';
+            card.disabled = !available;
+
+            // foto beberapa member (atau inisial kalau belum ada foto)
+            const faces = document.createElement('span');
+            faces.className = 'ib-group-faces';
+            group.members.slice(0, 4).forEach(m => {
+                const face = document.createElement('span');
+                face.className = 'ib-group-face';
+                if (m.poses) {
+                    const img = document.createElement('img');
+                    img.src = idolSrcs(group, m)[0];
+                    img.alt = '';
+                    face.appendChild(img);
+                } else {
+                    face.innerText = m.name.charAt(0).toUpperCase();
+                }
+                faces.appendChild(face);
+            });
+
+            const name = document.createElement('span');
+            name.className = 'ib-group-name';
+            name.innerText = group.name;
+            showGroupLogo(group, name);
+
+            const meta = document.createElement('span');
+            meta.className = 'ib-group-meta';
+            meta.innerText = `${group.members.length} member`;
+
+            card.append(faces, name, meta);
+            if (!available) {
+                const badge = document.createElement('span');
+                badge.className = 'ib-group-badge';
+                badge.innerText = 'Segera hadir';
+                card.appendChild(badge);
+                card.title = 'Foto member belum tersedia';
+            }
+            card.addEventListener('click', () => selectGroup(group.id));
+            grid.appendChild(card);
+        });
+    });
+}
+
+// Ganti teks nama grup dengan logonya (kalau file logo ada dan berhasil dimuat)
+function showGroupLogo(group, textEl) {
+    const src = groupLogoSrc(group);
+    if (!src) return;
+    const logo = new Image();
+    logo.className = textEl.className.replace('name', 'logo');
+    if (textEl.id) logo.id = textEl.id;
+    logo.alt = group.name;
+    logo.onload = () => textEl.replaceWith(logo);
+    logo.src = src;
+}
+
+function selectGroup(id) {
+    const group = getIdolGroup(id);
+    if (!group || !groupAvailable(group)) return;
+    GROUP = group;
+    saveSetting('ibGroup', id);
+    const nameEl = document.createElement('strong');
+    nameEl.id = 'ibGroupName';
+    nameEl.className = 'ib-group-bar-name';
+    nameEl.innerText = group.name;
+    const oldName = $('ibGroupName');
+    oldName.replaceWith(nameEl);
+    showGroupLogo(group, nameEl);
+    resetShots();
+    groupPicker.hidden = true;
+    mainLayout.hidden = false;
+    refreshShootUI();
+    window.scrollTo({ top: 0 });
+    if (state.camera && !stream) startCamera();
+}
+
+function showGroupPicker() {
+    if (state.busy) return;
+    mainLayout.hidden = true;
+    groupPicker.hidden = false;
+    stopCamera();
+    window.scrollTo({ top: 0 });
+}
+
+$('ibChangeGroupBtn').addEventListener('click', showGroupPicker);
+
 // ---------- Mulai ----------
 buildStyleList();
 buildCountList();
@@ -1356,5 +1453,5 @@ buildSideList();
 updateToggles();
 refreshShootUI();
 requestAnimationFrame(loop);
-startCamera();
+buildGroupPicker(); // kamera baru dinyalakan setelah grup dipilih
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(markDirty);

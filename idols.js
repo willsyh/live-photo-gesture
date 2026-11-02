@@ -7,10 +7,16 @@
 // Menambah grup baru: tambahkan satu objek di IDOL_GROUPS, lalu taruh foto-fotonya
 // di folder idols/<id grup>/.
 
+// type: 'boy' (boy group) atau 'girl' (girl group).
+// logo (opsional): nama file logo di folder grup, misalnya 'logo.png' -> idols/cortis/logo.png.
+//   Pakai PNG transparan. Kalau kosong, nama grup ditulis sebagai teks.
+// Grup baru bisa dipilih setelah minimal satu member punya foto (isi "poses").
 const IDOL_GROUPS = [
     {
         id: 'cortis',
         name: 'CORTIS',
+        type: 'boy',
+        logo: 'logo.png',
         members: [
             { id: 'martin', name: 'Martin', poses: 10 },
             { id: 'james', name: 'James', poses: 11 },
@@ -18,8 +24,59 @@ const IDOL_GROUPS = [
             { id: 'seonghyeon', name: 'Seonghyeon', poses: 7 },
             { id: 'keonho', name: 'Keonho', poses: 7 }
         ]
+    },
+    {
+        id: 'bts',
+        name: 'BTS',
+        type: 'boy',
+        members: [
+            { id: 'rm', name: 'RM' },
+            { id: 'jin', name: 'Jin' },
+            { id: 'suga', name: 'SUGA' },
+            { id: 'jhope', name: 'j-hope' },
+            { id: 'jimin', name: 'Jimin' },
+            { id: 'v', name: 'V' },
+            { id: 'jungkook', name: 'Jung Kook' }
+        ]
+    },
+    {
+        id: 'hearts2hearts',
+        name: 'Hearts2Hearts',
+        type: 'girl',
+        members: [
+            { id: 'jiwoo', name: 'Jiwoo' },
+            { id: 'carmen', name: 'Carmen' },
+            { id: 'yuha', name: 'Yuha' },
+            { id: 'stella', name: 'Stella' },
+            { id: 'juun', name: 'Juun' },
+            { id: 'ana', name: 'A-na' },
+            { id: 'ian', name: 'Ian' },
+            { id: 'yeon', name: 'Ye-on' }
+        ]
+    },
+    {
+        id: 'illit',
+        name: 'ILLIT',
+        type: 'girl',
+        members: [
+            { id: 'yunah', name: 'Yunah' },
+            { id: 'minju', name: 'Minju' },
+            { id: 'moka', name: 'Moka' },
+            { id: 'wonhee', name: 'Wonhee' },
+            { id: 'iroha', name: 'Iroha' }
+        ]
     }
 ];
+
+// Alamat file logo grup, atau null kalau grup belum punya logo
+function groupLogoSrc(group) {
+    return group && group.logo ? `idols/${group.id}/${group.logo}` : null;
+}
+
+// Grup bisa dipilih kalau ada member yang sudah punya foto
+function groupAvailable(group) {
+    return group.members.some(m => m.poses > 0);
+}
 
 // Semua file foto (pose) milik satu member
 function idolSrcs(group, member) {
