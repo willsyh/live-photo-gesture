@@ -18,7 +18,10 @@ const STRIP_STYLES = [
     { id: 'blush', name: 'Blush', kind: 'blush', bg: '#ef9a8c' },
     { id: 'crumpled', name: 'Kertas Kusut', kind: 'crumpled', bg: '#d9d9dc' },
     { id: 'lavender', name: 'Lavender', kind: 'lavender', bg: '#d8c7ef' },
-    { id: 'magic', name: 'Magic School', kind: 'magic', bg: '#5a4aa4' }
+    { id: 'magic', name: 'Magic School', kind: 'magic', bg: '#5a4aa4' },
+    { id: 'galaxy', name: 'Galaxy', kind: 'galaxy', bg: '#24213a' },
+    { id: 'fanweek', name: 'Fan Week', kind: 'fanweek', bg: '#3d5fae' },
+    { id: 'littlehouse', name: 'Little House', kind: 'littlehouse', bg: '#a9b6ee' }
 ];
 
 // css = filter canvas; tint = lapisan warna tipis di atas foto (opsional)
@@ -122,6 +125,12 @@ function readyPoses(memberId) {
     // member tanpa "poses" belum punya foto; tidak perlu dicoba dimuat
     if (!member || !member.poses) return [];
     return idolSrcs(GROUP, member).map(src => loadIdolImage(src, onImagesChanged)).filter(idolReady);
+}
+
+// Logo grup yang sedang dipilih (null kalau grup belum punya logo)
+function groupLogoImage() {
+    const src = groupLogoSrc(GROUP);
+    return src ? loadIdolImage(src, onImagesChanged) : null;
 }
 
 // Gambar member untuk satu shot; offset dipakai untuk sisi kedua di mode "Dua sisi"
@@ -863,6 +872,309 @@ const STRIP_KINDS = {
         }
     },
 
+    // langit malam berkilau: 4 foto di kiri, polaroid besar (shot 1) di kanan, rasi bintang
+    galaxy: {
+        placeholder: ['#c9cad3', '#b3b5c2'],
+        geometry(count) {
+            const slots = stackSlots(count, { x: 70, w: 360, h: 236, top: 78, gap: 12 }, () => ({ border: 4, radius: 16 }));
+            // polaroid besar menampilkan ulang shot 1
+            slots.push({ x: 500, y: 268, w: 300, h: 380, rot: 0, border: 0, radius: 6, shot: 0 });
+            const H = Math.max(1130, 78 + count * 236 + (count - 1) * 12 + 70);
+            return { W: 900, H, slots, polaroid: { x: 484, y: 252, w: 332, h: 470 } };
+        },
+        background(ctx, geo) {
+            const { W, H } = geo;
+            const g = ctx.createLinearGradient(0, 0, W, H);
+            g.addColorStop(0, '#1b1a2b');
+            g.addColorStop(0.5, '#2a2640');
+            g.addColorStop(1, '#16151f');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H);
+
+            // garis cahaya bima sakti
+            ctx.save();
+            ctx.translate(W * 0.5, H * 0.42);
+            ctx.rotate(-0.35);
+            const glow = ctx.createRadialGradient(0, 0, 10, 0, 0, 380);
+            glow.addColorStop(0, 'rgba(255,255,255,0.35)');
+            glow.addColorStop(0.4, 'rgba(190,180,255,0.12)');
+            glow.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.scale(2.2, 0.35);
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(0, 0, 380, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // kilau / bintang kecil
+            const rand = seededRandom(23);
+            for (let i = 0; i < 900; i++) {
+                ctx.fillStyle = `rgba(255,255,255,${0.15 + rand() * 0.6})`;
+                const r = rand() < 0.95 ? 0.7 : 1.6;
+                ctx.beginPath();
+                ctx.arc(rand() * W, rand() * H, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // kartu polaroid
+            const p = geo.polaroid;
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = '#d9d9de';
+            roundRect(ctx, p.x, p.y, p.w, p.h, 8);
+            ctx.fill();
+            ctx.restore();
+        },
+        slotExtra(ctx, ix, iy, iw, ih, i, style) {
+            // logo grup di pojok kanan bawah foto terakhir
+            if (i !== state.count - 1) return;
+            const logo = groupLogoImage();
+            if (!idolReady(logo)) return;
+            const lw = iw * 0.32;
+            const lh = lw * (logo.naturalHeight / logo.naturalWidth);
+            ctx.drawImage(logo, ix + iw - lw - 10, iy + ih - lh - 8, lw, lh);
+        },
+        overlay(ctx, geo, style, title) {
+            const { W, H } = geo;
+            ctx.textBaseline = 'alphabetic';
+
+            ctx.font = '400 30px "Archivo Black", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('LIVE PHOTO', 70, 58);
+
+            // judul
+            ctx.textAlign = 'center';
+            ctx.font = '700 20px "Cinzel Decorative", serif';
+            ctx.fillStyle = '#e9e7f5';
+            ctx.fillText(String(new Date().getFullYear()), 650, 70);
+            ctx.font = '700 64px "Cinzel Decorative", "Playfair Display", serif';
+            glowText(ctx, 'FAN', 650, 138, '#ffffff', 8);
+            glowText(ctx, 'WEEK', 650, 204, '#ffffff', 8);
+
+            // tulisan vertikal kecil di samping strip
+            ctx.font = '700 12px "Oswald", sans-serif';
+            setSpacing(ctx, 2);
+            ctx.fillStyle = '#ffffff';
+            [[446, 300], [52, H - 220]].forEach(([x, y]) => {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(-Math.PI / 2);
+                ctx.fillText('LIVE PHOTO', 0, 0);
+                ctx.restore();
+            });
+            setSpacing(ctx, 0);
+
+            // rasi bintang
+            const pts = [[560, 860], [610, 830], [660, 845], [700, 800], [760, 790], [790, 830], [740, 880], [690, 900]];
+            ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            pts.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+            ctx.stroke();
+            pts.forEach(([x, y]) => {
+                ctx.fillStyle = '#ffffff';
+                sparkle(ctx, x, y, 9);
+                ctx.fill();
+            });
+
+            ctx.textAlign = 'center';
+            ctx.font = '400 22px "Archivo Black", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(`${title} · LIVE PHOTO`, 650, H - 34);
+        }
+    },
+
+    // strip biru dengan cipratan oranye-merah & tulisan vertikal
+    fanweek: {
+        placeholder: ['#e1e4ec', '#cdd2de'],
+        geometry(count) {
+            const slots = stackSlots(count, { x: 48, w: 466, h: 360, top: 96, gap: 8 }, i => ({
+                radius: i === 0 ? 26 : 6
+            }));
+            return { W: 600, H: 96 + count * 360 + (count - 1) * 8 + 52, slots };
+        },
+        background(ctx, geo) {
+            const { W, H } = geo;
+            ctx.fillStyle = '#3d5fae';
+            ctx.fillRect(0, 0, W, H);
+            // cipratan warna
+            const rand = seededRandom(31);
+            const blobs = [['rgba(232,88,40,0.75)', 0.3], ['rgba(210,50,40,0.6)', 0.55], ['rgba(240,140,60,0.6)', 0.8], ['rgba(110,150,230,0.5)', 0.15]];
+            blobs.forEach(([color, fy], k) => {
+                const cx = k % 2 === 0 ? -20 + rand() * 120 : W - 100 + rand() * 120;
+                const cy = H * fy;
+                const g = ctx.createRadialGradient(cx, cy, 10, cx, cy, 220);
+                g.addColorStop(0, color);
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, 160, 260, 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            // titik putih kecil
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            for (let i = 0; i < 10; i++) {
+                ctx.beginPath();
+                ctx.arc(14 + rand() * 20, 140 + rand() * (H - 260), 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        },
+        overlay(ctx, geo, style, title) {
+            const { W, H, slots } = geo;
+            ctx.textBaseline = 'alphabetic';
+
+            // label & judul
+            ctx.font = '600 14px "Oswald", sans-serif';
+            const label = 'live photo';
+            const lw = ctx.measureText(label).width + 26;
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            roundRect(ctx, 40, 30, lw, 24, 12);
+            ctx.stroke();
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, 40 + lw / 2, 47);
+
+            ctx.font = '700 30px "Cinzel Decorative", "Playfair Display", serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('FAN', W / 2 + 10, 50);
+            ctx.fillText('WEEK', W / 2 + 10, 82);
+
+            // tulisan vertikal bergantian di kanan tiap foto
+            ctx.font = '600 13px "Oswald", sans-serif';
+            setSpacing(ctx, 3);
+            slots.forEach((slot, i) => {
+                ctx.save();
+                ctx.translate(W - 38, slot.y + slot.h / 2);
+                ctx.rotate(Math.PI / 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(i % 2 === 0 ? `${GROUP.name.toUpperCase()} week` : 'LIVE PHOTO', 0, 0);
+                ctx.restore();
+            });
+            setSpacing(ctx, 0);
+
+            // baris bawah
+            ctx.textAlign = 'right';
+            ctx.font = '500 12px "Oswald", sans-serif';
+            ctx.fillStyle = '#e8eeff';
+            ctx.fillText('keep the moment at', W - 120, H - 20);
+            ctx.font = '700 16px "Oswald", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('live photo', W - 40, H - 20);
+            ctx.textAlign = 'left';
+            ctx.font = '700 13px "Oswald", sans-serif';
+            ctx.fillText(title, 48, H - 20);
+        }
+    },
+
+    // strip biru lavender: foto pertama beratap rumah, segitiga di kiri, stiker bintang
+    littlehouse: {
+        placeholder: ['#f1f1f4', '#e3e4ea'],
+        geometry(count) {
+            const slots = stackSlots(count, { x: 64, w: 440, h: 352, top: 104, gap: 14 }, i => (i === 0 ? { shape: 'house' } : {}));
+            return { W: 600, H: 104 + count * 352 + (count - 1) * 14 + 54, slots };
+        },
+        background(ctx, geo) {
+            ctx.fillStyle = '#a9b6ee';
+            ctx.fillRect(0, 0, geo.W, geo.H);
+        },
+        overlay(ctx, geo, style, title) {
+            const { W, H, slots } = geo;
+            ctx.textBaseline = 'alphabetic';
+
+            // judul lucu
+            ctx.save();
+            ctx.translate(48, 52);
+            ctx.rotate(-0.06);
+            stickerText(ctx, 'Our Little', 0, 0, '38px "Patrick Hand", cursive', '#fff6a8', '#6a62c9', 7);
+            stickerText(ctx, 'House', 70, 38, '44px "Patrick Hand", cursive', '#ffd1e8', '#6a62c9', 7);
+            ctx.restore();
+
+            // label kanan atas
+            ctx.font = '600 14px "Oswald", sans-serif';
+            const label = 'live photo';
+            const lw = ctx.measureText(label).width + 26;
+            ctx.fillStyle = '#f7e9ff';
+            roundRect(ctx, W - 60 - lw, 34, lw, 26, 13);
+            ctx.fill();
+            ctx.fillStyle = '#6a62c9';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, W - 60 - lw / 2, 52);
+
+            // segitiga kecil di kiri tiap foto
+            ctx.fillStyle = '#ffffff';
+            slots.forEach(slot => {
+                const cx = 34;
+                const cy = slot.y + slot.h / 2;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - 8);
+                ctx.lineTo(cx + 8, cy + 6);
+                ctx.lineTo(cx - 8, cy + 6);
+                ctx.closePath();
+                ctx.fill();
+            });
+
+            // tulisan vertikal bergantian
+            ctx.font = '700 14px "Oswald", sans-serif';
+            setSpacing(ctx, 3);
+            ctx.fillStyle = '#ffffff';
+            slots.forEach((slot, i) => {
+                ctx.save();
+                ctx.translate(W - 50, slot.y + slot.h / 2);
+                ctx.rotate(Math.PI / 2);
+                ctx.textAlign = 'center';
+                ctx.fillText(i % 2 === 0 ? GROUP.name.toUpperCase() : 'FANMEETING', 0, 0);
+                ctx.restore();
+            });
+            setSpacing(ctx, 0);
+
+            // stiker bintang lucu di pojok foto pertama
+            const s0 = slots[0];
+            const sx = s0.x + s0.w + 6;
+            const sy = s0.y + s0.h - 10;
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(0.2);
+            ctx.fillStyle = '#ff9ec7';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            starPath(ctx, 0, 0, 26, 14);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#5b3b6e';
+            ctx.beginPath();
+            ctx.arc(-6, -2, 2.4, 0, Math.PI * 2);
+            ctx.arc(6, -2, 2.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#5b3b6e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 3, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+            ctx.stroke();
+            ctx.restore();
+
+            // hati putih di dekat foto ketiga
+            if (slots[2]) {
+                ctx.fillStyle = '#ffffff';
+                heartPath(ctx, slots[2].x - 4, slots[2].y + slots[2].h - 20, 30);
+                ctx.fill();
+            }
+
+            // baris bawah
+            ctx.textAlign = 'left';
+            ctx.font = '700 12px "Oswald", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(title, 64, H - 22);
+            ctx.textAlign = 'right';
+            ctx.font = '500 12px "Oswald", sans-serif';
+            ctx.fillText('keep the moment at', W - 150, H - 22);
+            ctx.font = '700 16px "Oswald", sans-serif';
+            ctx.fillText('live photo', W - 64, H - 22);
+        }
+    },
+
     // strip lavender bergaya photo studio, tulisan vertikal di samping
     lavender: {
         placeholder: ['#ffffff', '#f7f4fb'],
@@ -935,7 +1247,10 @@ function stripGeometry(style, count) {
     return stripKind(style).geometry(count);
 }
 
-function drawSlot(ctx, slot, i, live, style, kind, filter) {
+// slot.shot (opsional): kotak ini menampilkan ulang foto dari shot lain (misalnya polaroid besar)
+// slot.shape === 'house': sisi atas kotak berbentuk atap rumah
+function drawSlot(ctx, slot, slotIndex, live, style, kind, filter) {
+    const i = slot.shot ?? slotIndex;
     const shot = state.shots[i];
     const { x, y, w, h, border: b, radius: r } = slot;
 
@@ -960,7 +1275,16 @@ function drawSlot(ctx, slot, i, live, style, kind, filter) {
     const ih = h - b * 2;
     const ir = Math.max(r - b, 0);
     ctx.save();
-    if (ir > 0) roundRect(ctx, ix, iy, iw, ih, ir);
+    if (slot.shape === 'house') {
+        const roof = Math.min(40, ih * 0.12);
+        ctx.beginPath();
+        ctx.moveTo(ix, iy + roof);
+        ctx.lineTo(ix + iw / 2, iy);
+        ctx.lineTo(ix + iw, iy + roof);
+        ctx.lineTo(ix + iw, iy + ih);
+        ctx.lineTo(ix, iy + ih);
+        ctx.closePath();
+    } else if (ir > 0) roundRect(ctx, ix, iy, iw, ih, ir);
     else {
         ctx.beginPath();
         ctx.rect(ix, iy, iw, ih);
@@ -1014,8 +1338,8 @@ function drawSlot(ctx, slot, i, live, style, kind, filter) {
         ctx.strokeRect(ix, iy, iw, ih);
     }
 
-    // tanda shot aktif di pratinjau
-    if (live && i === state.current) {
+    // tanda shot aktif di pratinjau (tidak untuk kotak salinan)
+    if (live && i === state.current && slot.shot === undefined) {
         ctx.strokeStyle = '#fde68a';
         ctx.lineWidth = 6;
         roundRect(ctx, ix + 3, iy + 3, iw - 6, ih - 6, ir);

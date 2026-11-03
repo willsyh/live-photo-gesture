@@ -59,7 +59,7 @@ const IDOL_GROUPS = [
             { id: 'changbin', name: 'Changbin' },
             { id: 'hyunjin', name: 'Hyunjin' },
             { id: 'han', name: 'Han' },
-            { id: 'felix', name: 'Felix' },
+            { id: 'felix', name: 'Felix', poses: 3 },
             { id: 'seungmin', name: 'Seungmin' },
             { id: 'in', name: 'I.N' }
         ]
