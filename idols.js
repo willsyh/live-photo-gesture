@@ -54,7 +54,7 @@ const IDOL_GROUPS = [
         type: 'boy',
         logo: 'logo.png',
         members: [
-            { id: 'bangchan', name: 'Bang Chan', poses: 7 },
+            { id: 'bangchan', name: 'Bang Chan', poses: 11 },
             { id: 'leeknow', name: 'Lee Know' },
             { id: 'changbin', name: 'Changbin' },
             { id: 'hyunjin', name: 'Hyunjin' },
