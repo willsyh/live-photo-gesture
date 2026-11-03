@@ -17,7 +17,8 @@ const STRIP_STYLES = [
     { id: 'magazine', name: 'Majalah', kind: 'magazine', bg: '#f3efe7' },
     { id: 'blush', name: 'Blush', kind: 'blush', bg: '#ef9a8c' },
     { id: 'crumpled', name: 'Kertas Kusut', kind: 'crumpled', bg: '#d9d9dc' },
-    { id: 'lavender', name: 'Lavender', kind: 'lavender', bg: '#d8c7ef' }
+    { id: 'lavender', name: 'Lavender', kind: 'lavender', bg: '#d8c7ef' },
+    { id: 'magic', name: 'Magic School', kind: 'magic', bg: '#5a4aa4' }
 ];
 
 // css = filter canvas; tint = lapisan warna tipis di atas foto (opsional)
@@ -118,7 +119,8 @@ function memberById(id) {
 
 function readyPoses(memberId) {
     const member = memberById(memberId);
-    if (!member) return [];
+    // member tanpa "poses" belum punya foto; tidak perlu dicoba dimuat
+    if (!member || !member.poses) return [];
     return idolSrcs(GROUP, member).map(src => loadIdolImage(src, onImagesChanged)).filter(idolReady);
 }
 
@@ -736,6 +738,128 @@ const STRIP_KINDS = {
             ctx.fill();
             stickerText(ctx, 'LOVE', cx, cy - 6, '400 46px "Archivo Black", sans-serif', '#ffffff', '#5a5a5a', 6);
             stickerText(ctx, 'LOVE', cx, cy + 48, '400 46px "Archivo Black", sans-serif', '#ffffff', '#5a5a5a', 6);
+        }
+    },
+
+    // ungu "magic school": kotak-kotak di atas, foto bulat rapat, bintang & tulisan vertikal
+    magic: {
+        placeholder: ['#cbc7da', '#b7b2cb'],
+        geometry(count) {
+            const slots = stackSlots(count, { x: 110, w: 400, h: 330, top: 92, gap: 8 }, () => ({ radius: 22 }));
+            return { W: 600, H: 92 + count * 330 + (count - 1) * 8 + 74, slots };
+        },
+        background(ctx, geo) {
+            const { W, H } = geo;
+            const g = ctx.createLinearGradient(0, 0, W, H);
+            g.addColorStop(0, '#4b3c8c');
+            g.addColorStop(0.5, '#6656b0');
+            g.addColorStop(1, '#4a3b88');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, H);
+
+            // pola kotak-kotak di tepi atas
+            const sq = 10;
+            for (let x = 0; x < W; x += sq) {
+                for (let row = 0; row < 2; row++) {
+                    ctx.fillStyle = ((x / sq + row) % 2 === 0) ? '#ffffff' : '#b9aef0';
+                    ctx.fillRect(x, row * sq, sq, sq);
+                }
+            }
+
+            // panel gelap di belakang foto
+            const first = geo.slots[0];
+            const last = geo.slots[geo.slots.length - 1];
+            ctx.fillStyle = 'rgba(25, 18, 60, 0.35)';
+            roundRect(ctx, first.x - 12, first.y - 12, first.w + 24, last.y + last.h - first.y + 24, 28);
+            ctx.fill();
+
+            // bintang kecil di pinggir
+            const rand = seededRandom(17);
+            ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+            ctx.lineWidth = 1.6;
+            // diletakkan di antara tulisan vertikal dan foto supaya tidak menimpa tulisan
+            for (let i = 0; i < 12; i++) {
+                const side = i % 2 === 0 ? 80 + rand() * 6 : W - 76 + rand() * 6;
+                sparkle(ctx, side, 120 + rand() * (H - 240), 5 + rand() * 4);
+                ctx.stroke();
+            }
+        },
+        overlay(ctx, geo, style, title) {
+            const { W, H, slots } = geo;
+            ctx.textBaseline = 'alphabetic';
+
+            // label kiri atas
+            ctx.font = '600 14px "Oswald", sans-serif';
+            const label = 'live photo';
+            const lw = ctx.measureText(label).width + 26;
+            ctx.fillStyle = '#d9d1ff';
+            roundRect(ctx, 34, 32, lw, 26, 13);
+            ctx.fill();
+            ctx.fillStyle = '#2b2160';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, 34 + lw / 2, 50);
+
+            // judul
+            ctx.textAlign = 'center';
+            ctx.font = '700 12px "Oswald", sans-serif';
+            setSpacing(ctx, 3);
+            ctx.fillStyle = '#e9e4ff';
+            ctx.fillText(`${GROUP.name}'s`, W / 2 + 40, 40);
+            setSpacing(ctx, 0);
+            ctx.font = '700 30px "Cinzel Decorative", "Playfair Display", serif';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#2b2160';
+            ctx.strokeText('MAGIC SCHOOL', W / 2 + 40, 72);
+            glowText(ctx, 'MAGIC SCHOOL', W / 2 + 40, 72, '#ffffff', 10);
+
+            // bintang jatuh di dekat beberapa foto
+            const shooting = (x, y, flip) => {
+                ctx.save();
+                ctx.translate(x, y);
+                if (flip) ctx.scale(-1, 1);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.arc(-26, -22, 34, 0.15 * Math.PI, 0.65 * Math.PI);
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                starPath(ctx, 0, 0, 14);
+                ctx.fill();
+                ctx.fillStyle = '#7e6cd0';
+                starPath(ctx, 0, 0, 7);
+                ctx.fill();
+                ctx.restore();
+            };
+            if (slots[0]) shooting(slots[0].x + slots[0].w + 26, slots[0].y + slots[0].h - 40, false);
+            if (slots[2]) shooting(slots[2].x - 26, slots[2].y + slots[2].h - 40, true);
+
+            // tulisan vertikal
+            ctx.font = '700 14px "Oswald", sans-serif';
+            setSpacing(ctx, 3);
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.save();
+            ctx.translate(W - 46, slots[0].y + 150);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('ALL AROUND THE WORLD', 0, 0);
+            ctx.restore();
+            ctx.save();
+            ctx.translate(58, slots[slots.length - 1].y + slots[slots.length - 1].h - 150);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText(`${GROUP.name.toUpperCase()} EVERYWHERE`, 0, 0);
+            ctx.restore();
+            setSpacing(ctx, 0);
+
+            // baris bawah
+            ctx.textAlign = 'center';
+            ctx.font = '500 13px "Oswald", sans-serif';
+            ctx.fillStyle = '#cfc6ff';
+            ctx.fillText('keep the magic alive at', W / 2 - 34, H - 26);
+            ctx.font = '700 16px "Oswald", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('live photo', W / 2 + 70, H - 26);
         }
     },
 

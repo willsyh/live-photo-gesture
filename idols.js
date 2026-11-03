@@ -52,8 +52,9 @@ const IDOL_GROUPS = [
         name: 'Stray Kids',
         genre: 'kpop',
         type: 'boy',
+        logo: 'logo.png',
         members: [
-            { id: 'bangchan', name: 'Bang Chan' },
+            { id: 'bangchan', name: 'Bang Chan', poses: 7 },
             { id: 'leeknow', name: 'Lee Know' },
             { id: 'changbin', name: 'Changbin' },
             { id: 'hyunjin', name: 'Hyunjin' },
