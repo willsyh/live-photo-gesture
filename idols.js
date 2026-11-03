@@ -7,14 +7,21 @@
 // Menambah grup baru: tambahkan satu objek di IDOL_GROUPS, lalu taruh foto-fotonya
 // di folder idols/<id grup>/.
 
+// genre: 'kpop' atau 'jpop' (lihat IDOL_GENRES).
 // type: 'boy' (boy group) atau 'girl' (girl group).
 // logo (opsional): nama file logo di folder grup, misalnya 'logo.png' -> idols/cortis/logo.png.
 //   Pakai PNG transparan. Kalau kosong, nama grup ditulis sebagai teks.
 // Grup baru bisa dipilih setelah minimal satu member punya foto (isi "poses").
+const IDOL_GENRES = [
+    { id: 'kpop', name: 'K-Pop' },
+    { id: 'jpop', name: 'J-Pop' }
+];
+
 const IDOL_GROUPS = [
     {
         id: 'cortis',
         name: 'CORTIS',
+        genre: 'kpop',
         type: 'boy',
         logo: 'logo.png',
         members: [
@@ -28,6 +35,7 @@ const IDOL_GROUPS = [
     {
         id: 'bts',
         name: 'BTS',
+        genre: 'kpop',
         type: 'boy',
         members: [
             { id: 'rm', name: 'RM' },
@@ -40,8 +48,25 @@ const IDOL_GROUPS = [
         ]
     },
     {
+        id: 'straykids',
+        name: 'Stray Kids',
+        genre: 'kpop',
+        type: 'boy',
+        members: [
+            { id: 'bangchan', name: 'Bang Chan' },
+            { id: 'leeknow', name: 'Lee Know' },
+            { id: 'changbin', name: 'Changbin' },
+            { id: 'hyunjin', name: 'Hyunjin' },
+            { id: 'han', name: 'Han' },
+            { id: 'felix', name: 'Felix' },
+            { id: 'seungmin', name: 'Seungmin' },
+            { id: 'in', name: 'I.N' }
+        ]
+    },
+    {
         id: 'hearts2hearts',
         name: 'Hearts2Hearts',
+        genre: 'kpop',
         type: 'girl',
         members: [
             { id: 'jiwoo', name: 'Jiwoo' },
@@ -57,6 +82,7 @@ const IDOL_GROUPS = [
     {
         id: 'illit',
         name: 'ILLIT',
+        genre: 'kpop',
         type: 'girl',
         members: [
             { id: 'yunah', name: 'Yunah' },

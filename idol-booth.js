@@ -1353,10 +1353,51 @@ document.addEventListener('keydown', e => {
 const groupPicker = $('ibGroupPicker');
 const mainLayout = $('ibMain');
 
+// genre yang sedang dibuka di layar pilih grup (K-Pop / J-Pop)
+let currentGenre = IDOL_GENRES.some(g => g.id === readSetting('ibGenre', 'kpop'))
+    ? readSetting('ibGenre', 'kpop')
+    : IDOL_GENRES[0].id;
+
+function buildGenreTabs() {
+    const tabs = $('ibGenreTabs');
+    tabs.innerHTML = '';
+    IDOL_GENRES.forEach(genre => {
+        const count = IDOL_GROUPS.filter(g => g.genre === genre.id).length;
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'ib-genre-tab';
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('aria-selected', genre.id === currentGenre);
+        tab.append(genre.name);
+        const badge = document.createElement('span');
+        badge.className = 'ib-genre-count';
+        badge.innerText = count;
+        tab.appendChild(badge);
+        tab.addEventListener('click', () => {
+            currentGenre = genre.id;
+            saveSetting('ibGenre', genre.id);
+            buildGroupPicker();
+        });
+        tabs.appendChild(tab);
+    });
+}
+
 function buildGroupPicker() {
+    buildGenreTabs();
+    const inGenre = IDOL_GROUPS.filter(g => g.genre === currentGenre);
+    groupPicker.querySelectorAll('.ib-category-block').forEach(block => {
+        block.hidden = !inGenre.some(g => g.type === block.dataset.type);
+    });
+    const empty = $('ibGenreEmpty');
+    empty.hidden = inGenre.length > 0;
+    if (!inGenre.length) {
+        const genre = IDOL_GENRES.find(g => g.id === currentGenre);
+        empty.innerText = `Grup ${genre ? genre.name : ''} segera hadir! Nantikan ya.`;
+    }
+
     groupPicker.querySelectorAll('.ib-group-grid').forEach(grid => {
         grid.innerHTML = '';
-        IDOL_GROUPS.filter(g => g.type === grid.dataset.type).forEach(group => {
+        inGenre.filter(g => g.type === grid.dataset.type).forEach(group => {
             const available = groupAvailable(group);
             const card = document.createElement('button');
             card.type = 'button';

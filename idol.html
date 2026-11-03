@@ -28,11 +28,19 @@
         <h2 id="ibGroupPickerTitle" class="ib-step-title">Mau foto bareng siapa?</h2>
         <p class="ib-hint">Pilih grup dulu. Member dan posenya nanti bisa diatur per foto.</p>
 
-        <h3 class="ib-category">Boy Group</h3>
-        <div class="ib-group-grid" data-type="boy"></div>
+        <div id="ibGenreTabs" class="ib-genre-tabs" role="tablist" aria-label="Pilih genre"></div>
 
-        <h3 class="ib-category">Girl Group</h3>
-        <div class="ib-group-grid" data-type="girl"></div>
+        <div class="ib-category-block" data-type="boy">
+            <h3 class="ib-category">Boy Group</h3>
+            <div class="ib-group-grid" data-type="boy"></div>
+        </div>
+
+        <div class="ib-category-block" data-type="girl">
+            <h3 class="ib-category">Girl Group</h3>
+            <div class="ib-group-grid" data-type="girl"></div>
+        </div>
+
+        <p id="ibGenreEmpty" class="ib-genre-empty" hidden></p>
     </section>
 
     <main id="ibMain" class="ib-layout" hidden>

@@ -1861,3 +1861,64 @@ button.color-changing {
     vertical-align: middle;
     margin-left: 4px;
 }
+
+/* tab genre K-Pop / J-Pop */
+.ib-genre-tabs {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.ib-genre-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    font-family: "Archivo Black", var(--font-display);
+    font-size: 1.1rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 2.5px solid var(--ink);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: pointer;
+}
+
+.ib-genre-tab:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--ink);
+}
+
+.ib-genre-tab[aria-selected="true"] {
+    background: var(--ink);
+    color: var(--paper);
+}
+
+.ib-genre-count {
+    min-width: 24px;
+    padding: 1px 7px;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--ink);
+    background: var(--highlight);
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+}
+
+.ib-category-block[hidden],
+.ib-genre-empty[hidden] {
+    display: none;
+}
+
+.ib-genre-empty {
+    margin-top: 22px;
+    padding: 28px 16px;
+    font-size: 1.2rem;
+    text-align: center;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 2px dashed var(--ink);
+    border-radius: var(--wobble-sm);
+}
