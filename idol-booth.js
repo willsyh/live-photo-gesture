@@ -80,13 +80,14 @@ const state = {
     title: readSetting('ibTitle', ''),
     filter: findById(FILTERS, readSetting('ibFilter', 'natural'), FILTERS[0]).id,
     side: findById(SIDES, readSetting('ibSide', 'right'), SIDES[1]).id,
+    // ukuran terakhir jadi nilai awal untuk shot baru (tiap shot menyimpan ukuran & gesernya sendiri)
     size: Number(readSetting('ibSize', '95')) || 95,
-    shift: Number(readSetting('ibShift', '0')) || 0,
     mirror: readSetting('ibMirror', '1') === '1',
     camera: true,
     current: 0,
     busy: false,
-    // { member: id | 'custom' | null, pose: angka, custom: Image | null, photo: canvas | null }
+    // { member: id | 'custom' | null, pose: angka, custom: Image | null, photo: canvas | null,
+    //   size: % tinggi kotak, shift: % geser ke samping }
     shots: []
 };
 
@@ -99,7 +100,9 @@ function resetShots() {
         member: GROUP.members[i % GROUP.members.length].id,
         pose: randomPose(),
         custom: null,
-        photo: null
+        photo: null,
+        size: state.size,
+        shift: 0
     }));
     state.current = 0;
 }
@@ -219,12 +222,13 @@ function drawCover(ctx, src, x, y, w, h, flip) {
     ctx.restore();
 }
 
-// Member berdiri di bawah kotak; tinggi = size% kotak, lebar maks 62% kotak
-function drawMember(ctx, img, x, y, w, h, side) {
+// Member berdiri di bawah kotak; tinggi = size% kotak, lebar maks 62% kotak.
+// Ukuran & geser diambil dari shot itu sendiri, jadi tiap foto bisa diatur terpisah.
+function drawMember(ctx, img, x, y, w, h, side, shot) {
     if (!img || !(img.naturalWidth || img.width)) return;
     const nw = img.naturalWidth || img.width;
     const nh = img.naturalHeight || img.height;
-    let ih = h * (state.size / 100);
+    let ih = h * (shot.size / 100);
     let iw = ih * (nw / nh);
     const maxW = w * 0.62;
     if (iw > maxW) {
@@ -232,7 +236,7 @@ function drawMember(ctx, img, x, y, w, h, side) {
         ih = iw * (nh / nw);
     }
     const margin = w * 0.02;
-    const shift = (state.shift / 100) * w;
+    const shift = (shot.shift / 100) * w;
     const ix = (side === 'left' ? x + margin : x + w - iw - margin) + shift;
     ctx.drawImage(img, ix, y + h - ih, iw, ih);
 }
@@ -1690,10 +1694,10 @@ function drawSlot(ctx, slot, slotIndex, live, style, kind, filter) {
 
     const main = shotMemberImage(shot);
     if (state.side === 'both') {
-        drawMember(ctx, main, ix, iy, iw, ih, 'right');
-        drawMember(ctx, shotMemberImage(shot, 1), ix, iy, iw, ih, 'left');
+        drawMember(ctx, main, ix, iy, iw, ih, 'right', shot);
+        drawMember(ctx, shotMemberImage(shot, 1), ix, iy, iw, ih, 'left', shot);
     } else {
-        drawMember(ctx, main, ix, iy, iw, ih, state.side);
+        drawMember(ctx, main, ix, iy, iw, ih, state.side, shot);
     }
     ctx.filter = 'none';
 
@@ -1919,6 +1923,7 @@ function allShotsDone() {
 function refreshShootUI() {
     buildShotTabs();
     buildWhoCard();
+    syncSizeSliders();
     const shot = state.shots[state.current];
     const n = state.current + 1;
     $('ibShootBtn').innerText = shot.photo ? `Ulangi shot ${n}` : `Ambil shot ${n}`;
@@ -2079,18 +2084,26 @@ $('ibTitleInput').addEventListener('input', e => {
     markDirty();
 });
 
-$('ibSize').value = state.size;
-$('ibSize').addEventListener('input', e => {
-    state.size = Number(e.target.value);
-    saveSetting('ibSize', String(state.size));
-    markDirty();
-});
+// Slider ukuran & geser hanya mengubah shot yang sedang dipilih
+function syncSizeSliders() {
+    const shot = state.shots[state.current];
+    $('ibSize').value = shot.size;
+    $('ibShift').value = shot.shift;
+    $('ibSizeLabel').innerText = `Ukuran & posisi member di shot ${state.current + 1}`;
+}
 
-$('ibShift').value = state.shift;
-$('ibShift').addEventListener('input', e => {
-    state.shift = Number(e.target.value);
-    saveSetting('ibShift', String(state.shift));
-    markDirty();
+['size', 'shift'].forEach(key => {
+    const input = $(key === 'size' ? 'ibSize' : 'ibShift');
+    input.addEventListener('input', e => {
+        const value = Number(e.target.value);
+        state.shots[state.current][key] = value;
+        // ukuran diingat untuk kunjungan berikutnya; geser selalu mulai dari tengah
+        if (key === 'size') {
+            state.size = value;
+            saveSetting('ibSize', String(value));
+        }
+        markDirty();
+    });
 });
 
 $('ibNobodyBtn').addEventListener('click', () => {
@@ -2121,6 +2134,8 @@ $('ibApplyAllBtn').addEventListener('click', () => {
     state.shots.forEach((s, i) => {
         s.member = src.member;
         s.custom = src.custom;
+        s.size = src.size;
+        s.shift = src.shift;
         s.pose = src.pose + (i - state.current) + 1000;
     });
     buildWhoCard();
